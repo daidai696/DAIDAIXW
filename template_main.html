@@ -153,6 +153,17 @@
         }
         .news-card-source::before { content: '来源：'; }
 
+        .news-card-overview {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 14px;
+            padding: 12px 16px;
+            background: #faf9f7;
+            border-radius: 6px;
+            border-left: 3px solid var(--text-muted);
+        }
+
         .detail-list { display: flex; flex-direction: column; gap: 8px; }
         .detail-item {
             font-size: 14px;
@@ -223,6 +234,13 @@
             color: var(--text-muted);
             font-size: 12px;
             letter-spacing: .5px;
+        }
+
+        .empty-notice {
+            color: #aaa;
+            padding: 20px 24px;
+            font-size: 14px;
+            text-align: center;
         }
 
         @media (max-width: 600px) {
@@ -297,15 +315,31 @@
         (function () {
             var tabs = document.querySelectorAll('.tab');
             var panels = document.querySelectorAll('.panel');
+
+            function switchTab(tab) {
+                var panel = tab.getAttribute('data-panel');
+                tabs.forEach(function (x) { x.classList.remove('active'); });
+                panels.forEach(function (x) { x.classList.remove('active'); });
+                tab.classList.add('active');
+                document.getElementById('panel-' + panel).classList.add('active');
+            }
+
             tabs.forEach(function (t) {
-                t.addEventListener('click', function () {
-                    var panel = this.getAttribute('data-panel');
-                    tabs.forEach(function (x) { x.classList.remove('active'); });
-                    panels.forEach(function (x) { x.classList.remove('active'); });
-                    this.classList.add('active');
-                    document.getElementById('panel-' + panel).classList.add('active');
-                });
+                t.addEventListener('click', function () { switchTab(this); });
             });
+
+            var activeTab = document.querySelector('.tab.active');
+            var activePanel = document.querySelector('.panel.active');
+            if (activePanel && activePanel.textContent.trim() === '暂无新闻') {
+                for (var i = 0; i < tabs.length; i++) {
+                    var pid = tabs[i].getAttribute('data-panel');
+                    var panelEl = document.getElementById('panel-' + pid);
+                    if (panelEl && panelEl.textContent.trim() !== '暂无新闻') {
+                        switchTab(tabs[i]);
+                        break;
+                    }
+                }
+            }
         })();
     </script>
 </body>
