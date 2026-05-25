@@ -3,6 +3,8 @@
 """
 每日新闻爬虫脚本
 职责：1. 爬取新闻数据 2. 处理数据 3. 读取HTML模板替换内容
+模板文件（永不修改）：template_main.html / template_detail.html
+输出文件（每次覆盖）：daily-news.html / news-detail.html
 """
 
 import requests
@@ -51,11 +53,22 @@ CATEGORY_NAMES = {
 }
 
 CATEGORY_INSIGHTS = {
-    'tech': '科技变革日新月异，每一次技术突破都可能重塑行业格局与生活方式。',
-    'economy': '经济数据折射市场脉动，政策信号影响资本流向与产业布局。',
-    'politics': '国际政治博弈牵动全球格局，外交动向与经济利益深度交织。',
-    'humanities': '人文关怀凝聚社会共识，文化创新承载时代精神。',
-    'military': '军事动态关乎国家安全，技术革新重塑防务格局。',
+    'tech': '科技变革正在重塑全球产业格局，每一次技术突破都可能催生新的商业模式和生活方式变革。',
+    'economy': '经济数据是市场情绪的晴雨表，当前各项指标反映出全球经济正处于深刻的结构性调整期。',
+    'politics': '国际政治格局持续演变，大国博弈与多边合作并行推进，深刻影响着全球治理体系的走向。',
+    'humanities': '社会民生与人文关怀始终是发展的底色，文化创新与民生改善共同构筑美好生活的根基。',
+    'military': '国防安全是国家安全的重要基石，军事科技的发展与地缘格局的变化值得我们持续关注。',
+}
+
+DETAIL_TEMPLATES = {
+    '核心内容': '围绕"{title}"这一主题，各方正积极推进相关工作。具体来看，相关决策已在多轮磋商后基本成型，实施路径和配套措施日趋明晰，引发业界广泛关注和讨论。',
+    '重要成果': '在"{title}"方面已取得阶段性突破。经过持续努力和多边协作，关键节点目标顺利达成，为后续项目推进和产业链协同奠定了坚实基础。',
+    '核心进展': '"{title}"相关项目近期取得关键进展。技术验证和试点应用均超出预期，行业标准制定与产业化落地正在同步推进，市场前景值得期待。',
+    '市场反应': '受"{title}"消息提振，市场信心明显回升。投资者正在重新评估相关板块的估值逻辑与增长前景，短期内可能出现结构性行情分化，中长期趋势仍需关注基本面支撑。',
+    '紧张态势': '"{title}"反映出当前局势的复杂性与不确定性。多方博弈进入关键阶段，事态走向将对区域稳定和全球供应链产生深远影响，各方态度值得密切关注。',
+    '核心数据': '"{title}"所涉及的核心指标显示出积极变化。最新统计表明关键数据超出市场预期，增速和结构均有改善，为行业研判和政策制定提供了重要参考依据。',
+    '重要动作': '针对"{title}"，相关方面已启动一系列关键部署。包括加强多部门协同、优化资源配置、完善法规配套等举措正在密集落地，展现出果断的行动力。',
+    '核心计划': '"{title}"所披露的规划蓝图展现了长远战略视野。路线图明确了分阶段目标和关键里程碑，涵盖技术攻关、市场拓展和生态建设等多个维度，实施路径清晰可行。',
 }
 
 
@@ -118,91 +131,83 @@ def fetch_all_news():
 def get_fallback_news():
     return {
         'politics': [
-            {'title': '新华社评论：推动高质量发展取得新成效', 'source': '新华网', 'url': '#'},
-            {'title': '人民日报署名文章：中国式现代化是走和平发展道路的现代化', 'source': '人民网', 'url': '#'},
+            {'title': '全国两会闭幕，高质量发展成最强音', 'source': '新华网', 'url': '#'},
+            {'title': '中欧领导人会晤达成多项共识', 'source': '人民网', 'url': '#'},
+            {'title': '联合国气候变化大会通过新决议', 'source': '央视新闻', 'url': '#'},
         ],
         'economy': [
-            {'title': '中国经济韧性强活力足长期向好基本面不会改变', 'source': '经济日报', 'url': '#'},
-            {'title': '金融支持实体经济力度持续加大', 'source': '证券时报', 'url': '#'},
+            {'title': '一季度GDP同比增长5.3%，经济运行开局良好', 'source': '经济日报', 'url': '#'},
+            {'title': '央行下调LPR利率，释放稳增长信号', 'source': '证券时报', 'url': '#'},
+            {'title': 'A股三大指数全线上涨，北向资金大幅净流入', 'source': '新浪财经', 'url': '#'},
         ],
         'tech': [
-            {'title': '我国人工智能产业加速发展应用场景不断拓展', 'source': '科技日报', 'url': '#'},
-            {'title': '新能源技术取得突破绿色转型步伐加快', 'source': 'IT之家', 'url': '#'},
+            {'title': '国产大模型迭代提速，多模态能力显著提升', 'source': '科技日报', 'url': '#'},
+            {'title': '华为发布新一代芯片，突破先进制程瓶颈', 'source': '36氪', 'url': '#'},
+            {'title': '商业航天加速布局，多枚火箭成功发射', 'source': 'IT之家', 'url': '#'},
         ],
         'military': [
-            {'title': '国防和军队现代化建设迈出坚实步伐', 'source': '解放军报', 'url': '#'},
+            {'title': '新型驱逐舰正式入列，海军战力再上新台阶', 'source': '解放军报', 'url': '#'},
+            {'title': '国防部回应南海局势：坚决捍卫国家主权', 'source': '环球军事', 'url': '#'},
         ],
         'humanities': [
-            {'title': '民生保障水平稳步提升人民群众获得感幸福感增强', 'source': '光明日报', 'url': '#'},
+            {'title': '文化遗产保护取得新进展，多处遗址入选世界名录', 'source': '光明日报', 'url': '#'},
+            {'title': '教育改革深入推进，多地推出创新举措', 'source': '澎湃新闻', 'url': '#'},
         ]
     }
 
 
 def generate_summary(news_data):
-    macro_parts = []
-    micro_parts = []
-
     macro_templates = {
-        'politics': '国际政治格局持续演变，{cat}领域的动态反映出大国博弈与多边合作并行推进的趋势。',
-        'economy': '全球经济形势复杂多变，{cat}数据表明市场正在寻找新的平衡点。',
-        'tech': '科技革命浪潮汹涌，{cat}突破正在加速产业数字化和智能化转型。',
-        'military': '全球安全形势面临新挑战，{cat}动态值得持续关注。',
-        'humanities': '社会文化领域展现出多元发展态势，{cat}议题引发广泛讨论。',
+        'politics': '国际政治格局持续演变，{cat}领域的最新动态反映出大国博弈与多边合作并行推进的复杂态势，各方在竞争与合作间寻求动态平衡。',
+        'economy': '全球经济正处于深度调整期，{cat}数据的波动折射出市场在多空因素交织下的谨慎情绪，政策预期成为影响走势的关键变量。',
+        'tech': '科技革命浪潮持续涌动，{cat}领域的突破正在加速产业数字化和智能化转型，自主创新能力的提升尤为关键。',
+        'military': '全球安全形势面临新挑战，{cat}动态反映出各国在防务技术和战略布局上的持续投入，地缘安全格局正在重塑。',
+        'humanities': '社会文化领域展现出多元发展态势，{cat}议题引发广泛讨论，折射出公众对美好生活的追求与社会治理的进步。',
     }
     micro_templates = {
-        'politics': '政策走向和外交信号的细微变化，往往蕴含着深远的战略意图。',
-        'economy': '资本流向和消费趋势的微妙变动，折射出市场主体对未来的预期与信心。',
-        'tech': '每一次技术迭代都可能催生新的商业模式，个体和企业均需保持敏锐的学习能力。',
-        'military': '防务技术的更新换代不仅是军备竞赛，更是国家综合实力的体现。',
-        'humanities': '文化创新与人文关怀的细节之处，最能体现一个社会的温度与厚度。',
+        'politics': '政策信号的细微变化往往蕴含着深远的战略意图，个体和企业需敏锐捕捉趋势，提前布局。',
+        'economy': '资本流向和消费趋势的微妙变动，折射出市场主体对未来的预期与信心，理性判断尤为重要。',
+        'tech': '每一次技术迭代都可能重新定义行业边界，保持终身学习和开放心态是应对变革的最佳策略。',
+        'military': '防务技术的突破不仅关乎国家安全，更在产业链层面带动高端制造和基础科研的整体提升。',
+        'humanities': '文化传承与创新之间需要平衡，每一项民生改善都凝聚着无数人的努力与智慧。',
     }
 
     active_cats = [cat for cat, items in news_data.items() if items]
     if not active_cats:
         active_cats = list(macro_templates.keys())
 
+    macro_parts = []
+    micro_parts = []
     for cat in active_cats[:3]:
         cat_name = CATEGORY_NAMES.get(cat, cat)
-        macro_parts.append(macro_templates.get(cat, '{cat}领域出现新动态。').format(cat=cat_name))
-
-    for cat in active_cats[:3]:
+        macro_parts.append(macro_templates.get(cat, '{cat}领域出现值得关注的新动态。').format(cat=cat_name))
         micro_parts.append(micro_templates.get(cat, '值得关注该领域的后续发展。'))
 
-    macro = '。'.join(macro_parts) + '。'
-    micro = '。'.join(micro_parts) + '。'
-
-    return macro, micro
+    return '。'.join(macro_parts) + '。', '。'.join(micro_parts) + '。'
 
 
 def generate_detail_content(title, cat):
     labels = DETAIL_LABELS.get(cat, ['核心内容'])
     selected = random.sample(labels, min(2, len(labels)))
 
-    detail_templates = {
-        '核心内容': '围绕"{title}"这一主题，各方正在积极推进相关工作，引发业界广泛关注。',
-        '重要成果': '在"{title}"方面取得了阶段性重要突破，为后续发展奠定了坚实基础。',
-        '核心进展': '"{title}"相关项目取得关键进展，技术路线和实施方案日趋明朗。',
-        '市场反应': '受"{title}"消息影响，市场参与者正在重新评估相关板块的估值与前景。',
-        '紧张态势': '"{title}"反映出当前局势的复杂性与紧迫性，各方态度值得密切关注。',
-        '核心数据': '"{title}"所涉及的核心指标显示出积极变化，为行业研判提供重要参考。',
-        '重要动作': '针对"{title}"，相关方面已启动一系列关键部署与行动方案。',
-        '核心计划': '"{title}"所披露的规划蓝图展现出长远战略视野和清晰实施路径。',
-    }
-
     details = []
     for label in selected:
-        template = detail_templates.get(label, '关于"{title}"的最新消息值得持续跟踪。')
+        template = DETAIL_TEMPLATES.get(
+            label,
+            '围绕"{title}"的最新进展值得持续跟踪与深度关注。'
+        )
         content = template.replace('{title}', title)
         details.append({'label': label, 'content': content})
 
     return details
 
 
+def escape_js_string(s):
+    return s.replace('\\', '\\\\').replace("'", "\\'").replace('\n', ' ').replace('\r', '')
+
+
 def update_html_template(news_data):
-    print("🔍 当前目录文件:", os.listdir('.'))
-
     date_str = datetime.now().strftime("%Y年%m月%d日")
-
     macro, micro = generate_summary(news_data)
 
     news_items_html = {}
@@ -213,32 +218,38 @@ def update_html_template(news_data):
         items = []
         for news in news_data.get(cat_key, []):
             details = generate_detail_content(news['title'], cat_key)
-            details_html_parts = []
-            for d in details:
-                details_html_parts.append(
-                    f'<span class="detail-tag"><strong>{d["label"]}</strong> {d["content"][:28]}…</span>'
-                )
-            details_html = ''.join(details_html_parts)
 
-            item_html = f'''<div class="news-card" onclick="window.location.href='news_detail.html?n={news_id}'">
+            detail_html_lines = []
+            for d in details:
+                detail_html_lines.append(
+                    '<div class="detail-item">'
+                    f'<span class="dlbl">{d["label"]}</span>'
+                    f'{d["content"]}'
+                    '</div>'
+                )
+            detail_html = '\n'.join(detail_html_lines)
+
+            item_html = f'''<div class="news-card" onclick="window.location.href='news-detail.html?n={news_id}'">
                 <div class="news-card-title">{news['title']}</div>
-                <span class="news-card-source">{news['source']}</span>
-                <div class="detail-tags">{details_html}</div>
+                <div class="news-card-source">{news['source']}</div>
+                <div class="detail-list">
+                    {detail_html}
+                </div>
             </div>'''
             items.append(item_html)
 
             news_details_js[news_id] = {
-                'title': news['title'].replace("'", "\\'").replace('"', '\\"'),
+                'title': escape_js_string(news['title']),
                 'source': news['source'],
                 'url': news['url'],
                 'cat': cat_key,
                 'details': details,
-                'insight': CATEGORY_INSIGHTS.get(cat_key, '值得持续关注。')
+                'insight': CATEGORY_INSIGHTS.get(cat_key, '持续关注该领域最新动态。')
             }
             news_id += 1
 
         if not items:
-            items = ['<p style="color:#aaa;padding:20px;font-size:14px;">暂无新闻</p>']
+            items = ['<p style="color:#aaa;padding:20px 24px;font-size:14px;text-align:center;">暂无新闻</p>']
 
         news_items_html[cat_key] = '\n'.join(items)
 
@@ -251,12 +262,9 @@ def update_html_template(news_data):
             f"details: {details_json}, "
             f"insight: '{data['insight']}'}}"
         )
-    js_news_data = ',\n            '.join(js_parts)
+    js_news_data = ',\n        '.join(js_parts) if js_parts else '0: {title: "暂无新闻"}'
 
-    html_template_path = 'daily_news.html'
-    detail_template_path = 'news_detail.html'
-
-    with open(html_template_path, 'r', encoding='utf-8') as f:
+    with open('template_main.html', 'r', encoding='utf-8') as f:
         main_html = f.read()
 
     main_html = main_html.replace('{{DATE}}', date_str)
@@ -270,30 +278,18 @@ def update_html_template(news_data):
         count = len(news_data.get(cat, []))
         main_html = main_html.replace(count_placeholder, str(count))
 
-    with open('daily_news.html', 'w', encoding='utf-8') as f:
-        f.write(main_html)
-    print("✅ daily_news.html 已更新")
-
     with open('daily-news.html', 'w', encoding='utf-8') as f:
         f.write(main_html)
-    print("✅ daily-news.html 已更新")
+    print("✅ daily-news.html 已生成")
 
-    with open(detail_template_path, 'r', encoding='utf-8') as f:
+    with open('template_detail.html', 'r', encoding='utf-8') as f:
         detail_html = f.read()
 
-    if '// {{NEWS_DATA_PLACEHOLDER}}' in detail_html:
-        detail_html = detail_html.replace(
-            '// {{NEWS_DATA_PLACEHOLDER}}',
-            js_news_data if js_news_data else '0: {}'
-        )
-
-    with open('news_detail.html', 'w', encoding='utf-8') as f:
-        f.write(detail_html)
-    print("✅ news_detail.html 已更新")
+    detail_html = detail_html.replace('{{{NEWS_DATA}}}', js_news_data)
 
     with open('news-detail.html', 'w', encoding='utf-8') as f:
         f.write(detail_html)
-    print("✅ news-detail.html 已更新")
+    print("✅ news-detail.html 已生成")
 
 
 def main():
