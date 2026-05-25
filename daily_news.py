@@ -274,6 +274,10 @@ def update_html_template(news_data):
         f.write(main_html)
     print("✅ daily_news.html 已更新")
 
+    with open('daily-news.html', 'w', encoding='utf-8') as f:
+        f.write(main_html)
+    print("✅ daily-news.html 已更新")
+
     with open(detail_template_path, 'r', encoding='utf-8') as f:
         detail_html = f.read()
 
@@ -286,6 +290,10 @@ def update_html_template(news_data):
     with open('news_detail.html', 'w', encoding='utf-8') as f:
         f.write(detail_html)
     print("✅ news_detail.html 已更新")
+
+    with open('news-detail.html', 'w', encoding='utf-8') as f:
+        f.write(detail_html)
+    print("✅ news-detail.html 已更新")
 
 
 def main():
