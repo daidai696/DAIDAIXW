@@ -269,72 +269,376 @@ def enrich_all_news(news_data):
     return enriched
 
 
+THEME_CLUSTERS = {
+
+    '政策信号与治理方向': {
+        'keywords': ['政策', '国务院', '发改委', '财政部', '央行', '会议', '改革', '制度', '法规', '条例',
+                   '意见', '方案', '规划', '部署', '出台', '印发', '审议', '全国人大', '政协', '两会',
+                   '高质量发展', '现代化', '体系', '机制', '中国式现代化'],
+        'desc_prefix': '政策层面',
+    },
+
+    '经济走势与市场信号': {
+        'keywords': ['GDP', '增长', '经济', '股市', 'A股', '利率', 'LPR', '贷款', '投资', '消费',
+                   '出口', '贸易', 'PMI', '数据', '同比', '环比', '上市', 'IPO', '资金', '流入',
+                   '流出', '涨', '跌', '收盘', '涨幅', '跌幅', '板块', '指数', '基金', '债券',
+                   '财政', '税收', '地方债', '专项债'],
+        'desc_prefix': '经济层面',
+    },
+
+    '科技突破与产业变革': {
+        'keywords': ['AI', '人工智能', '大模型', '算法', '芯片', '算力', '量子', '卫星', '航天',
+                   '自动驾驶', '机器人', '5G', '6G', '数字化', '平台经济', '技术', '创新', '突破',
+                   '研发', '发布', '迭代', '升级', '模型', '系统', '架构', '新能源', '光伏',
+                   '电池', '新能源汽车', '半导体', '集成电路'],
+        'desc_prefix': '科技与产业层面',
+    },
+
+    '国际格局与地缘动态': {
+        'keywords': ['美国', '中美', '欧盟', '北约', '俄罗斯', '日本', '韩国', '朝鲜', '台湾', '南海',
+                   '制裁', '关税', '贸易战', '谈判', '协定', '峰会', '访问', '声明', '军事', '国防',
+                   '演习', '装备', '部队', '安全', '威胁', '风险', '冲突', '争端', '主权', '领土'],
+        'desc_prefix': '国际层面',
+    },
+
+    '民生关切与社会脉动': {
+        'keywords': ['民生', '教育', '医疗', '住房', '养老', '就业', '收入', '保障', '社保', '医保',
+                   '文化', '遗产', '保护', '体育', '旅游', '交通', '环保', '碳', '绿色', '生态',
+                   '社会', '公众', '群众', '人民', '居民', '消费者', '生活', '健康'],
+        'desc_prefix': '社会与民生层面',
+    },
+}
+
+THEME_INSIGHT_TEMPLATES = {
+
+    '政策信号与治理方向': [
+        '这些政策信号表明决策层正在{angle}方向上持续发力，相关领域的配套措施有望在短期内密集落地，对于{impact_group}而言意味着明确的制度红利与规则重塑。',
+        '从政策连贯性来看，{angle}相关部署并非孤立动作，而是战略框架下的有机组成部分，后续实施细则的出台节奏将直接影响市场预期与产业布局。',
+    ],
+
+    '经济走势与市场信号': [
+        '从这些经济数据与市场信号中可以看到，{angle}正在成为当前经济运行的关键变量。市场主体需要关注政策传导的时滞效应，在短期波动中把握结构性机会。',
+        '当前经济数据反映出{angle}领域的边际变化值得重视。资金流向与板块轮动暗示着市场正在对中长期增长逻辑进行重新定价。',
+    ],
+
+    '科技突破与产业变革': [
+        '这几条科技动态共同勾勒出{angle}方向上的加速演进态势。技术从实验室到产品化的周期正在缩短，率先完成技术卡位与生态建设的企业将获得显著的先发优势。',
+        '{angle}领域的技术突破不是孤例，而是产业链协同升级的缩影。这意味着相关上下游企业都将面临能力重构的压力与机遇。',
+    ],
+
+    '国际格局与地缘动态': [
+        '{angle}方面的最新动向反映出国际力量对比的持续变化。对于外贸企业和跨境投资者而言，地缘政治风险正在成为必须纳入决策模型的核心变量。',
+        '围绕{angle}的多方博弈进入微妙阶段，短期内可能加剧市场波动，中长期则可能重塑全球供应链格局和区域合作框架。',
+    ],
+
+    '民生关切与社会脉动': [
+        '{angle}领域的进展折射出社会治理重心正在向提质增效转变。这不仅关系到民众的获得感，也将催生新的服务业态和消费增长点。',
+        '从{angle}议题的热度与政策跟进来看，民生领域正在从\"有没有\"向\"好不好\"过渡，这一转向本身蕴含着巨大的社会投资机遇。',
+    ],
+}
+
+THEME_TRANSITIONS = [
+    '值得关注的是，',
+    '与此同时，',
+    '另一个值得注意的信号是，',
+    '从更大的视野来看，',
+    '在另一条线索上，',
+    '将这些信息放在一起审视，不难发现',
+    '值得深思的是，',
+    '进一步看，',
+]
+
+THEME_CLOSING = [
+    '总体而言，今日的新闻图景折射出一个正在深刻调整的世界——政策在精细化、市场在结构性分化、技术在加速渗透、国际秩序在持续重组。在这种复杂环境中，保持信息敏锐度与独立思考能力，比以往任何时候都更加重要。',
+    '纵观今日各领域的动态，一个共同的主线逐渐清晰：变革正在从各个维度同时推进，而真正的机会往往隐藏在看似不相关的新闻线索之间的交叉地带。',
+    '今天的这些新闻共同提醒我们，当下的世界正处于多重转型叠加的关键时期——每一个领域的变化都不是孤立的，理解其间的联动关系，才能更准确地把握方向。',
+]
+
+
 def compose_daily_summary(enriched_news):
-    """基于所有新闻摘要撰写有深度的每日总结"""
-    by_cat = {}
-    for n in enriched_news:
-        by_cat.setdefault(n['cat'], []).append(n)
+    """基于所有新闻内容，进行主题归类、关联分析，撰写300-500字深度总结"""
+    if not enriched_news:
+        return '<p>今日暂无足够信息生成深度总结，请浏览各栏目新闻卡片了解详情。</p>'
 
-    titles_by_cat = {}
-    overviews_by_cat = {}
-    for cat, items in by_cat.items():
-        titles_by_cat[cat] = [item['title'] for item in items[:4]]
-        overviews_by_cat[cat] = [item['overview'] for item in items if item['overview']]
+    cluster_news = {}
+    for cluster_name, config in THEME_CLUSTERS.items():
+        cluster_news[cluster_name] = []
+        for n in enriched_news:
+            full_text = n['title'] + n.get('overview', '')
+            hits = sum(1 for kw in config['keywords'] if kw in full_text)
+            if hits >= 2:
+                cluster_news[cluster_name].append(n)
 
-    macro_parts = []
-    micro_parts = []
+    active_clusters = []
+    for cluster_name, news_list in cluster_news.items():
+        if news_list:
+            unique = []
+            seen_titles = set()
+            for n in news_list:
+                if n['title'] not in seen_titles:
+                    seen_titles.add(n['title'])
+                    unique.append(n)
+            if unique:
+                active_clusters.append((cluster_name, unique))
 
-    cat_macro_templates = {
-        'politics': '今日政治领域聚焦{}等方面，{}{}',
-        'economy': '经济方面重点报道了{}，{}{}',
-        'tech': '科技领域关注{}，{}{}',
-        'military': '军事方面围绕{}等动态，{}{}',
-        'humanities': '人文社会领域涉及{}，{}{}',
-    }
-    cat_micro_templates = {
-        'politics': '{}等消息显示国际政治格局正在发生深刻调整，各方博弈进入新阶段。',
-        'economy': '{}等动态提示我们，市场主体需关注政策节奏与结构性机会。',
-        'tech': '{}等技术突破表明，深耕自主创新仍是长期竞争力的关键。',
-        'military': '{}等动向提醒我们，安全与发展需统筹兼顾。',
-        'humanities': '{}等话题启示我们，民生改善与文化传承需要持续投入与关注。',
-    }
+    if not active_clusters:
 
-    for cat in ['politics', 'economy', 'tech', 'military', 'humanities']:
-        titles = titles_by_cat.get(cat, [])
-        overviews = overviews_by_cat.get(cat, [])
-        cat_name = CATEGORY_NAMES.get(cat, cat)
+        by_cat = {}
+        for n in enriched_news:
+            by_cat.setdefault(n['cat'], []).append(n)
+        cat_order = ['politics', 'economy', 'tech', 'military', 'humanities']
+        for cat in cat_order:
+            items = by_cat.get(cat, [])
+            if items:
+                titles = '、'.join(n['title'] for n in items[:3])
+                active_clusters.append((f'{CATEGORY_NAMES.get(cat, cat)}领域', items[:4]))
 
-        if not titles:
-            continue
+    cross_links = _find_cross_links(active_clusters)
 
-        title_list = '、'.join(titles[:3])
+    paragraphs = []
+    used_themes = set()
 
-        if overviews:
-            combined = overviews[0][:120]
-        else:
-            combined = f'{cat_name}今日有多条值得关注的消息。'
+    for idx, (cluster_name, news_list) in enumerate(active_clusters[:4]):
+        config = THEME_CLUSTERS.get(cluster_name, {'desc_prefix': cluster_name})
+        angle = _extract_cluster_angle(cluster_name, news_list)
 
-        macro = cat_macro_templates.get(cat, '{}领域{}。').format(
-            title_list,
-            combined[:80],
-            '值得持续关注。' if not combined else ''
+        titles_for_para = [n['title'] for n in news_list[:3]]
+
+        news_snippet = '、'.join(titles_for_para)
+
+        insight_templates = THEME_INSIGHT_TEMPLATES.get(
+            cluster_name,
+            ['{}方面的动态值得持续跟踪。']
         )
-        macro_parts.append(macro)
+        insight = insight_templates[idx % len(insight_templates)].format(
+            angle=angle,
+            impact_group=_guess_impact_group(cluster_name, news_list)
+        )
 
-        micro = cat_micro_templates.get(cat, '{}值得关注后续发展。').format(title_list)
-        micro_parts.append(micro)
+        if idx > 0 and idx < 4:
+            transition = THEME_TRANSITIONS[idx % len(THEME_TRANSITIONS)]
+        else:
+            transition = '今日'
 
-    macro_final = '；'.join(macro_parts[:4]) if macro_parts else '今日各领域新闻呈现多元态势，建议结合具体条目深入了解。'
-    micro_final = '；'.join(micro_parts[:4]) if micro_parts else '建议关注各领域的后续动态与政策走向。'
+        para = (f'{transition}，{news_snippet}等消息构成了{config.get("desc_prefix", cluster_name)}'
+                f'的主要看点。{insight}')
+        paragraphs.append(para)
+        used_themes.add(angle)
 
-    return macro_final, micro_final
+    if cross_links:
+        paragraphs.append(cross_links)
+
+    closing = THEME_CLOSING[len(paragraphs) % len(THEME_CLOSING)]
+    paragraphs.append(closing)
+
+    html_paragraphs = ''.join(f'<p>{p}</p>' for p in paragraphs)
+    return html_paragraphs
+
+
+def _extract_cluster_angle(cluster_name, news_list):
+
+    titles = ' '.join(n['title'] for n in news_list)
+    config = THEME_CLUSTERS.get(cluster_name, {})
+
+    angle_keywords = {
+        '政策信号与治理方向': [
+            ('深化改革', ['改革', '深化', '机制', '体制', '制度']),
+            ('高质量发展', ['高质量', '发展', '现代化', '升级', '转型']),
+            ('制度完善', ['完善', '健全', '规范', '标准', '体系']),
+            ('政策落地', ['落地', '实施', '执行', '推进', '落实']),
+            ('统筹协调', ['统筹', '协调', '综合', '一体', '联动']),
+        ],
+        '经济走势与市场信号': [
+            ('稳增长', ['稳增长', '复苏', '恢复', '回升', '回暖']),
+            ('结构性调整', ['结构', '调整', '分化', '转型', '优化']),
+            ('市场信心修复', ['信心', '修复', '反弹', '回暖', '企稳']),
+            ('政策宽松', ['降息', '降准', '宽松', '刺激', '扶持', '补贴']),
+            ('风险防控', ['风险', '防控', '监管', '规范', '整治']),
+        ],
+        '科技突破与产业变革': [
+            ('自主创新', ['自主', '国产', '突破', '自研', '原创']),
+            ('产业升级', ['产业', '升级', '数字化', '智能化', '转型']),
+            ('生态构建', ['生态', '平台', '开放', '合作', '协同']),
+            ('应用落地', ['落地', '应用', '商用', '产品', '场景']),
+            ('前沿探索', ['前沿', '探索', '突破', '首次', '领先']),
+        ],
+        '国际格局与地缘动态': [
+            ('大国博弈', ['博弈', '竞争', '对抗', '角力', '较量']),
+            ('区域安全', ['安全', '稳定', '和平', '冲突', '危机']),
+            ('多边合作', ['合作', '对话', '协商', '共识', '联合']),
+            ('战略调整', ['战略', '调整', '转向', '布局', '部署']),
+            ('供应链安全', ['供应链', '产业链', '依赖', '自主', '脱钩']),
+        ],
+        '民生关切与社会脉动': [
+            ('公共服务优化', ['服务', '优化', '提升', '改善', '便利']),
+            ('文化传承创新', ['文化', '传承', '创新', '遗产', '保护']),
+            ('社会保障完善', ['保障', '养老', '医疗', '教育', '住房']),
+            ('生态环境保护', ['生态', '环境', '绿色', '低碳', '环保']),
+            ('社会治理升级', ['治理', '管理', '服务', '基层', '社区']),
+        ],
+        '军事领域': [
+            ('国防现代化', ['现代化', '装备', '升级', '新型', '先进']),
+            ('安全态势应对', ['安全', '态势', '应对', '反应', '部署']),
+        ],
+    }
+
+    cluster_angles = angle_keywords.get(cluster_name, [('最新进展', [])])
+    best_angle = '最新进展'
+    best_score = 0
+
+    for angle_name, kws in cluster_angles:
+        score = sum(1 for kw in kws if kw in titles)
+        if score > best_score:
+            best_score = score
+            best_angle = angle_name
+
+    if best_score == 0 and not any(kw in titles for kw in (cluster_angles[0][1] if cluster_angles else [])):
+        for angle_name, kws in cluster_angles:
+            if any(kw in titles for kw in kws):
+                best_angle = angle_name
+                break
+
+    return best_angle
+
+
+def _guess_impact_group(cluster_name, news_list):
+    titles = ' '.join(n['title'] for n in news_list)
+    overviews = ' '.join(n.get('overview', '') for n in news_list)
+    full_text = titles + overviews
+
+    impact_maps = {
+        '政策信号与治理方向': [
+            ('相关行业从业者和投资者', ['企业', '市场', '产业', '行业', '投资']),
+            ('各级政府与市场主体', ['政府', '地方', '企业', '市场']),
+            ('社会公众与各类企业', ['公众', '社会', '企业', '民生']),
+        ],
+        '经济走势与市场信号': [
+            ('投资者和企业决策者', ['投资', '企业', '市场', '板块', '资金']),
+            ('市场主体与普通居民', ['消费', '物价', '收入', '就业', '民生']),
+            ('金融机构与实体经济部门', ['金融', '银行', '贷款', '实体', '企业']),
+        ],
+        '科技突破与产业变革': [
+            ('科技企业和技术从业者', ['科技', '技术', '企业', '研发', '人才']),
+            ('产业链上下游与终端用户', ['产业', '链条', '应用', '用户', '场景']),
+            ('行业竞争格局与就业市场', ['竞争', '格局', '就业', '岗位', '人才']),
+        ],
+        '国际格局与地缘动态': [
+            ('跨国企业和外贸从业者', ['贸易', '企业', '国际', '出口', '跨境']),
+            ('政策制定者与安全部门', ['政策', '安全', '战略', '部署', '外交']),
+            ('全球投资者与供应链管理者', ['投资', '全球', '供应链', '风险', '市场']),
+        ],
+        '民生关切与社会脉动': [
+            ('普通民众和社区服务提供者', ['民众', '居民', '社区', '服务', '生活']),
+            ('公共管理部门与服务机构', ['管理', '服务', '部门', '机构', '公共']),
+            ('文化教育从业者和家庭', ['文化', '教育', '家庭', '学校', '社会']),
+        ],
+        '科技领域': [
+            ('科技从业者与投资者', ['科技', '技术', '投资', '创新', '研发']),
+        ],
+        '经济领域': [
+            ('市场主体与投资者', ['市场', '投资', '经济', '企业', '资金']),
+        ],
+        '政治领域': [
+            ('政策关注者与相关行业', ['政策', '治理', '制度', '改革']),
+        ],
+        '军事领域': [
+            ('国防安全相关部门', ['国防', '安全', '军事', '装备']),
+        ],
+        '人文领域': [
+            ('社会公众与文化工作者', ['社会', '文化', '公众', '民生']),
+        ],
+    }
+
+    candidates = impact_maps.get(cluster_name, [('各界关注者', [])])
+    for group_name, kws in candidates:
+        for kw in kws:
+            if kw in full_text:
+                return group_name
+    return candidates[0][0]
+
+
+def _find_cross_links(active_clusters):
+
+    cluster_texts = {}
+    for cluster_name, news_list in active_clusters:
+        cluster_texts[cluster_name] = ' '.join(
+            n['title'] + ' ' + n.get('overview', '') for n in news_list
+        )
+
+    cross_patterns = [
+        {
+            'pair': ('政策信号与治理方向', '经济走势与市场信号'),
+            'template': (
+                '将政策信号与经济数据结合起来看，{policy_angle}的政策取向与{eco_angle}的市场表现'
+                '之间存在清晰的传导逻辑：政策意图正在通过多层次工具向实体经济渗透，'
+                '市场反馈又反过来影响后续政策的力度与节奏。理解这种互动关系，'
+                '有助于在不确定中把握确定性。'
+            ),
+        },
+        {
+            'pair': ('科技突破与产业变革', '经济走势与市场信号'),
+            'template': (
+                '科技突破与经济表现之间正在形成更紧密的正反馈循环：{tech_angle}方面的进展'
+                '为资本市场提供了新的叙事主线，而资本对技术赛道的持续押注'
+                '又加速了产业化进程。这种循环的强度与可持续性，将是判断当前创新周期质量的重要标尺。'
+            ),
+        },
+        {
+            'pair': ('政策信号与治理方向', '科技突破与产业变革'),
+            'template': (
+                '值得注意的是，{policy_angle}的政策导向与{tech_angle}的技术突破并非平行发展——'
+                '政策在不动声色地为技术创新划定跑道，而技术的进展又在倒逼规则更新。'
+                '政策与技术的关系正在从\"先发展后规范\"向\"边发展边规范\"演进。'
+            ),
+        },
+        {
+            'pair': ('国际格局与地缘动态', '经济走势与市场信号'),
+            'template': (
+                '国际层面的{geo_angle}动态与经济数据之间存在深层联动：地缘政治的不确定性'
+                '正在通过大宗商品价格、供应链稳定性和市场风险偏好等多个渠道影响经济运行，'
+                '企业和投资者需要将地缘风险评估纳入常规决策框架。'
+            ),
+        },
+        {
+            'pair': ('民生关切与社会脉动', '政策信号与治理方向'),
+            'template': (
+                '{policy_angle}的政策部署与{society_angle}的民生关切形成了有意义的呼应——'
+                '政策的着力点正在精准对焦民众的真实需求，这种\"自上而下\"与\"自下而上\"的共振'
+                '是社会治理效能提升的典型表现。'
+            ),
+        },
+    ]
+
+    short_names = {
+        '政策信号与治理方向': ('policy', 'policy_angle'),
+        '经济走势与市场信号': ('eco', 'eco_angle'),
+        '科技突破与产业变革': ('tech', 'tech_angle'),
+        '国际格局与地缘动态': ('geo', 'geo_angle'),
+        '民生关切与社会脉动': ('society', 'society_angle'),
+    }
+
+    cluster_names_present = [cn for cn, _ in active_clusters]
+
+    for pattern in cross_patterns:
+        pair = pattern['pair']
+        if pair[0] in cluster_names_present and pair[1] in cluster_names_present:
+            template = pattern['template']
+            angle_vars = {}
+            for cn, nl in active_clusters:
+                if cn == pair[0]:
+                    angle_vars[short_names[cn][1]] = _extract_cluster_angle(cn, nl)
+                elif cn == pair[1]:
+                    angle_vars[short_names[cn][1]] = _extract_cluster_angle(cn, nl)
+            return template.format(**angle_vars)
+
+    return ''
 
 
 def escape_js_string(s):
-    return s.replace('\\', '\\\\').replace("'", "\\'").replace('\n', ' ').replace('\r', '').replace('"', '&quot;')
+    return s.replace('\\', '\\\\').replace('"', '\\"').replace('\n', ' ').replace('\r', '')
 
 
-def update_html_template(enriched_news, macro, micro):
+def update_html_template(enriched_news, summary_html):
     date_str = datetime.now().strftime("%Y年%m月%d日")
 
     news_items_html = {}
@@ -408,8 +712,7 @@ def update_html_template(enriched_news, macro, micro):
         main_html = f.read()
 
     main_html = main_html.replace('{{DATE}}', date_str)
-    main_html = main_html.replace('{{SUMMARY_MACRO}}', macro)
-    main_html = main_html.replace('{{SUMMARY_MICRO}}', micro)
+    main_html = main_html.replace('{{SUMMARY}}', summary_html)
 
     for cat in ['tech', 'economy', 'politics', 'humanities', 'military']:
         placeholder = f'{{{{NEWS_{cat.upper()}}}}}'
@@ -433,20 +736,107 @@ def update_html_template(enriched_news, macro, micro):
 
 
 def compose_news_insight(news):
-    """为单条新闻撰写启示"""
-    cat = news['cat']
-    overview = news.get('overview', '')
+    """为单条新闻撰写有指向性的启示——说明这意味着什么、影响谁、后续如何发展"""
     title = news.get('title', '')
+    overview = news.get('overview', '')
+    cat = news.get('cat', '')
 
-    cat_insights = {
-        'tech': '该科技动态折射出产业变革的深层逻辑——技术突破正从实验室加速走向商业化落地，对行业格局和人才需求都将产生涟漪效应。',
-        'economy': '这条消息给出的核心信号是：在当前经济环境下，市场参与者的预期管理与风险对冲能力比以往任何时候都更重要。',
-        'politics': '该政治事件提醒我们，国际关系的每一次微妙调整背后都是深刻的战略博弈，理解其底层逻辑有助于看清未来走向。',
-        'military': '军事领域的每一步发展都是国家安全能力建设的具体体现，其背后涉及的技术储备和产业链支撑同样值得深思。',
-        'humanities': '这条人文新闻的意义超越了事件本身——它折射出社会价值取向与文化自信的深层脉动，提醒我们关注精神层面的建设。',
+    keyword_hints = _extract_key_hints(title + overview)
+
+    angle = keyword_hints.get('angle', '值得关注')
+    impact = keyword_hints.get('impact', '相关领域各方')
+    outlook = keyword_hints.get('outlook', '持续关注后续动态')
+
+    insight_templates = {
+        'tech': (
+            '“{title}”这一动态传递的核心信号是：{angle}。对于{impact}而言，这意味着技术路线和市场格局可能出现实质性变化。'
+            '从趋势上看，{outlook}，值得持续跟踪。'
+        ),
+        'economy': (
+            '“{title}”释放的关键信息在于{angle}。对{impact}来说，这条消息提示关注政策节奏与资金流向的变化。'
+            '前瞻来看，{outlook}，建议保持跟踪。'
+        ),
+        'politics': (
+            '“{title}”背后的深层逻辑是{angle}。对于{impact}来说，这意味着战略环境或制度框架正在发生调整。'
+            '展望后续，{outlook}，其连锁效应值得密切关注。'
+        ),
+        'military': (
+            '“{title}”反映出的核心变化在于{angle}。这对{impact}来说意味着安全能力或地缘态势进入新阶段。'
+            '后续值得关注的是，{outlook}。'
+        ),
+        'humanities': (
+            '“{title}”折射出的社会意义在于{angle}。对于{impact}而言，这意味着发展理念或生活方式正在演进。'
+            '未来可以期待，{outlook}。'
+        ),
     }
 
-    return cat_insights.get(cat, '持续关注该事件的后续发展与深远影响。')
+    default_tpl = (
+        '“{title}”值得关注的核心是{angle}。对于{impact}而言，这是一个值得重视的信号。'
+        '后续可以关注{outlook}。'
+    )
+
+    tpl = insight_templates.get(cat, default_tpl)
+    return tpl.format(title=title, angle=angle, impact=impact, outlook=outlook)
+
+
+def _extract_key_hints(text):
+
+    angle_hints = {
+        '政策密集出台': ['出台', '印发', '发布', '实施', '落地', '方案', '意见', '通知', '措施', '部署'],
+        '产业格局重塑': ['格局', '重塑', '整合', '重组', '并购', '洗牌', '淘汰', '崛起'],
+        '技术取得突破': ['突破', '攻克', '研发成功', '首次', '领先', '刷新', '纪录', '自主'],
+        '市场信心回暖': ['回暖', '反弹', '回升', '上涨', '流入', '看好', '增持', '突破'],
+        '监管边界厘清': ['监管', '规范', '整治', '查处', '合规', '标准', '门槛', '准入'],
+        '国际关系调整': ['关系', '合作', '对话', '协商', '谈判', '访问', '声明', '共识', '分歧'],
+        '增长动能切换': ['动能', '切换', '转型', '升级', '新经济', '新业态', '新模式', '消费'],
+        '安全态势变化': ['安全', '威胁', '风险', '冲突', '对抗', '防御', '部署', '警戒'],
+        '民生持续改善': ['改善', '提升', '优化', '保障', '服务', '惠民', '便利', '覆盖'],
+        '社会共识凝聚': ['共识', '凝聚', '呼声', '关注', '讨论', '热议', '反思', '觉醒'],
+    }
+
+    impact_hints = {
+        '投资者和资本市场': ['股市', '股价', '投资', '资本', '基金', '板块', '资金', '市值', 'IPO'],
+        '相关行业和企业': ['企业', '公司', '行业', '产业', '厂商', '供应链', '制造业'],
+        '政策制定和监管部门': ['政府', '部门', '监管', '政策', '制度', '法规', '标准'],
+        '科技从业者和研发机构': ['技术', '研发', '创新', '工程师', '科学家', '实验室', '专利'],
+        '普通消费者和居民': ['消费', '居民', '百姓', '民众', '用户', '生活', '服务', '价格', '物价'],
+        '外贸和跨境从业者': ['出口', '进口', '贸易', '关税', '跨境', '国际', '海外'],
+    }
+
+    outlook_hints = {
+        '政策细则和落地节奏将成为关键观察点': ['政策', '细则', '出台', '落地', '实施', '节奏'],
+        '行业洗牌和竞争格局可能加速演变': ['竞争', '格局', '洗牌', '行业', '市场', '淘汰'],
+        '技术商业化和生态建设进度值得跟踪': ['技术', '商业化', '应用', '落地', '生态', '平台'],
+        '市场情绪和资金流向可能出现结构性分化': ['市场', '资金', '情绪', '分化', '结构', '流向'],
+        '国际博弈态势和各方后续反应将影响走向': ['国际', '博弈', '反应', '后续', '多方', '回应'],
+        '配套措施和长效机制建设是下一步重点': ['配套', '机制', '体系', '建设', '完善', '长期'],
+    }
+
+    best_angle = '出现值得关注的变化'
+    best_angle_score = 0
+    for desc, kws in angle_hints.items():
+        score = sum(1 for kw in kws if kw in text)
+        if score > best_angle_score:
+            best_angle_score = score
+            best_angle = desc
+
+    best_impact = '相关各方'
+    best_impact_score = 0
+    for desc, kws in impact_hints.items():
+        score = sum(1 for kw in kws if kw in text)
+        if score > best_impact_score:
+            best_impact_score = score
+            best_impact = desc
+
+    best_outlook = '该事件的后续发展'
+    best_outlook_score = 0
+    for desc, kws in outlook_hints.items():
+        score = sum(1 for kw in kws if kw in text)
+        if score > best_outlook_score:
+            best_outlook_score = score
+            best_outlook = desc
+
+    return {'angle': best_angle, 'impact': best_impact, 'outlook': best_outlook}
 
 
 def fetch_all_news():
@@ -548,8 +938,8 @@ def main():
     else:
         enriched = enrich_all_news(news_data)
 
-    macro, micro = compose_daily_summary(enriched)
-    update_html_template(enriched, macro, micro)
+    summary_html = compose_daily_summary(enriched)
+    update_html_template(enriched, summary_html)
 
     total_news = len(enriched)
     total_with_content = sum(1 for n in enriched if n['overview'])
