@@ -210,21 +210,16 @@
             background: #dba959;
             border-radius: 2px;
         }
-        .summary-macro, .summary-micro {
-            margin-bottom: 14px;
-            padding-left: 14px;
-            border-left: 2px solid rgba(219,169,89,.3);
-        }
-        .summary-macro h3, .summary-micro h3 {
+        .summary-body p {
             font-size: 14px;
-            font-weight: 600;
-            color: #dba959;
-            margin-bottom: 6px;
-        }
-        .summary-macro p, .summary-micro p {
-            font-size: 13.5px;
-            line-height: 1.9;
+            line-height: 2;
             color: #bfb5a6;
+            margin-bottom: 16px;
+        }
+        .summary-body p:last-child {
+            margin-bottom: 0;
+            color: #dba959;
+            font-style: italic;
         }
 
         .footer {
@@ -296,13 +291,8 @@
 
         <div class="summary-section">
             <h2>今日总结与启示</h2>
-            <div class="summary-macro">
-                <h3>宏观视角</h3>
-                <p>{{SUMMARY_MACRO}}</p>
-            </div>
-            <div class="summary-micro">
-                <h3>微观洞察</h3>
-                <p>{{SUMMARY_MICRO}}</p>
+            <div class="summary-body">
+                {{SUMMARY}}
             </div>
         </div>
 
