@@ -256,13 +256,16 @@ def update_html_template(news_data):
     js_parts = []
     for idx, data in news_details_js.items():
         details_json = json.dumps(data['details'], ensure_ascii=False)
+        escaped_title = data['title'].replace("'", "\\'").replace('"', '\\"')
+        escaped_source = data['source'].replace("'", "\\'").replace('"', '\\"')
+        escaped_insight = data['insight'].replace("'", "\\'").replace('"', '\\"')
         js_parts.append(
-            f"{idx}: {{title: '{data['title']}', source: '{data['source']}', "
+            f"{idx}: {{title: '{escaped_title}', source: '{escaped_source}', "
             f"url: '{data['url']}', cat: '{data['cat']}', "
             f"details: {details_json}, "
-            f"insight: '{data['insight']}'}}"
+            f"insight: '{escaped_insight}'}}"
         )
-    js_news_data = ',\n        '.join(js_parts) if js_parts else '0: {title: "暂无新闻"}'
+    js_news_data = '{\n        ' + ',\n        '.join(js_parts) + '\n    }' if js_parts else '{0: {title: "暂无新闻"}}'
 
     with open('template_main.html', 'r', encoding='utf-8') as f:
         main_html = f.read()
