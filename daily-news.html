@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日新闻速递 — 2026年05月25日</title>
+    <style>
+        :root {
+            --bg: #f4f2ef;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-secondary: #555;
+            --text-muted: #888;
+            --border: #e8e4df;
+            --accent-tech: #2563eb;
+            --accent-economy: #d97706;
+            --accent-politics: #dc2626;
+            --accent-humanities: #7c3aed;
+            --accent-military: #0f766e;
+            --summary-bg: #1e1b18;
+            --tag-bg: #f0ede9;
+            --tag-text: #5c554d;
+            --shadow: 0 1px 3px rgba(0,0,0,.05), 0 4px 12px rgba(0,0,0,.04);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container { max-width: 1120px; margin: 0 auto; padding: 32px 20px 60px; }
+
+        .masthead {
+            text-align: center;
+            padding: 44px 20px 32px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 36px;
+        }
+        .masthead h1 {
+            font-size: 38px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+        .masthead .date {
+            font-size: 15px;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+        .masthead .divider {
+            display: inline-block;
+            width: 60px;
+            height: 3px;
+            background: var(--text);
+            margin: 14px 0 4px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .column {
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .column-header {
+            padding: 20px 22px 14px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .column-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+        .dot-tech    { background: var(--accent-tech); }
+        .dot-economy  { background: var(--accent-economy); }
+        .dot-politics { background: var(--accent-politics); }
+        .dot-humanities { background: var(--accent-humanities); }
+        .dot-military { background: var(--accent-military); }
+
+        .column-header h2 {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .column-header .count {
+            margin-left: auto;
+            font-size: 12px;
+            color: var(--text-muted);
+            background: var(--tag-bg);
+            padding: 2px 9px;
+            border-radius: 10px;
+        }
+
+        .column-body {
+            padding: 12px 22px 20px;
+            flex: 1;
+        }
+
+        .news-card {
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+        .news-card:last-child { border-bottom: none; }
+        .news-card:hover { padding-left: 6px; }
+        .news-card:hover .news-card-title { color: var(--accent-tech); }
+
+        .news-card-title {
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.5;
+            color: var(--text);
+            margin-bottom: 8px;
+            transition: color .2s ease;
+        }
+        .news-card-source {
+            display: inline-block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .detail-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .detail-tag {
+            font-size: 12px;
+            background: var(--tag-bg);
+            color: var(--tag-text);
+            padding: 3px 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+        .detail-tag strong {
+            font-weight: 600;
+            margin-right: 2px;
+        }
+
+        .summary-section {
+            margin-top: 40px;
+            background: var(--summary-bg);
+            border-radius: 14px;
+            padding: 36px 40px;
+            color: #e0dbd4;
+        }
+        .summary-section h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .summary-section h2::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 22px;
+            background: #dba959;
+            border-radius: 2px;
+        }
+        .summary-macro,
+        .summary-micro {
+            margin-bottom: 16px;
+            padding-left: 16px;
+            border-left: 2px solid rgba(219,169,89,.35);
+        }
+        .summary-macro h3,
+        .summary-micro h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #dba959;
+            margin-bottom: 8px;
+        }
+        .summary-macro p,
+        .summary-micro p {
+            font-size: 14px;
+            line-height: 1.85;
+            color: #c4bbb0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 13px;
+            letter-spacing: .5px;
+        }
+        .footer span { color: #aaa; }
+
+        @media (max-width: 680px) {
+            .masthead h1 { font-size: 26px; letter-spacing: 2px; }
+            .grid { grid-template-columns: 1fr; }
+            .summary-section { padding: 24px 22px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <div class="masthead">
+            <h1>每日新闻速递</h1>
+            <div class="divider"></div>
+            <div class="date">2026年05月25日</div>
+        </div>
+
+        <div class="grid">
+
+            <div class="column">
+                <div class="column-header">
+                    <span class="column-dot dot-tech"></span>
+                    <h2>科技</h2>
+                    <span class="count">0条</span>
+                </div>
+                <div class="column-body">
+                    <p style="color:#aaa;padding:20px;font-size:14px;">暂无新闻</p>
+                </div>
+            </div>
+
+            <div class="column">
+                <div class="column-header">
+                    <span class="column-dot dot-economy"></span>
+                    <h2>经济</h2>
+                    <span class="count">3条</span>
+                </div>
+                <div class="column-body">
+                    <div class="news-card" onclick="window.location.href='news_detail.html?n=1'">
+                <div class="news-card-title">爱尔眼科大额补税</div>
+                <span class="news-card-source">新浪财经</span>
+                <div class="detail-tags"><span class="detail-tag"><strong>核心数据</strong> "爱尔眼科大额补税"所涉及的核心指标显示出积极变化，为行…</span><span class="detail-tag"><strong>核心计划</strong> "爱尔眼科大额补税"所披露的规划蓝图展现出长远战略视野和…</span></div>
+            </div>
+<div class="news-card" onclick="window.location.href='news_detail.html?n=2'">
+                <div class="news-card-title">证监会严肃查处老虎富途长桥</div>
+                <span class="news-card-source">新浪财经</span>
+                <div class="detail-tags"><span class="detail-tag"><strong>市场反应</strong> 受"证监会严肃查处老虎富途长桥"消息影响，市场参与者正在…</span><span class="detail-tag"><strong>核心计划</strong> "证监会严肃查处老虎富途长桥"所披露的规划蓝图展现出长远…</span></div>
+            </div>
+<div class="news-card" onclick="window.location.href='news_detail.html?n=3'">
+                <div class="news-card-title">新浪财经芝麻AI</div>
+                <span class="news-card-source">新浪财经</span>
+                <div class="detail-tags"><span class="detail-tag"><strong>核心计划</strong> "新浪财经芝麻AI"所披露的规划蓝图展现出长远战略视野和…</span><span class="detail-tag"><strong>核心数据</strong> "新浪财经芝麻AI"所涉及的核心指标显示出积极变化，为行…</span></div>
+            </div>
+                </div>
+            </div>
+
+            <div class="column">
+                <div class="column-header">
+                    <span class="column-dot dot-politics"></span>
+                    <h2>政治</h2>
+                    <span class="count">5条</span>
+                </div>
+                <div class="column-body">
+                    <div class="news-card" onclick="window.location.href='news_detail.html?n=4'">
+                <div class="news-card-title">今日主角 | “敬二舅”刷屏：平凡之光，大有力量</div>
+                <span class="news-card-source">新华网</span>
+                <div class="detail-tags"><span class="detail-tag"><strong>重要成果</strong> 在"今日主角 | “敬二舅”刷屏：平凡之光，大有力量"方…</span><span class="detail-tag"><strong>紧张态势</strong> "今日主角 | “敬二舅”刷屏：平凡之光，大有力量"反映…</span></div>
+            </div>
+<div class="news-card" onclick="window.location.href='news_detail.html?n=5'">
+                <div class="news-card-title">如何理解文化自信的这一根本性意义？</div>
+                <span class="news-card-source">新华网</span>
+                <div class="detail-tags"><span class="detail-tag"><strong>紧张态势</strong> "如何理解文化自信的这一根本性意义？"反映出当前局势的复…</span><span class="detail-tag"><strong>重要成果</strong> 在"如何理解文化自信的这一根本性意义？"方面取得了阶段性…</span></div>
+            </div>
+<div class="news-card" onclick="window.location.href='news_detail.html?n=6'">
+                <div class="news-card-title">新时代中国发展进步的成功之道</div>
+                <span class="news-card-source">新华网</span>
+                <div class="detail-tags"><span class="detail-tag"><strong>重要成果</strong> 在"新时代中国发展进步的成功之道"方面取得了阶段性重要突…</span><span class="detail-tag"><strong>紧张态势</strong> "新时代中国发展进步的成功之道"反映出当前局势的复杂性与…</span></div>
+            </div>
+<div class="news-card" onclick="window.location.href='news_detail.html?n=7'">
+                <div class="news-card-title">开局起步“十五五”系列主题新闻发布会</div>
+                <span class="news-card-source">新华网</span>
+                <div class="detail-tags"><span class="detail-tag"><strong>核心内容</strong> 围绕"开局起步“十五五”系列主题新闻发布会"这一主题，各…</span><span class="detail-tag"><strong>重要成果</strong> 在"开局起步“十五五”系列主题新闻发布会"方面取得了阶段…</span></div>
+            </div>
+<div class="news-card" onclick="window.location.href='news_detail.html?n=8'">
+                <div class="news-card-title">“清清黄河”行进式报道</div>
+                <span class="news-card-source">新华网</span>
+                <div class="detail-tags"><span class="detail-tag"><strong>核心内容</strong> 围绕"“清清黄河”行进式报道"这一主题，各方正在积极推进…</span><span class="detail-tag"><strong>重要成果</strong> 在"“清清黄河”行进式报道"方面取得了阶段性重要突破，为…</span></div>
+            </div>
+                </div>
+            </div>
+
+            <div class="column">
+                <div class="column-header">
+                    <span class="column-dot dot-humanities"></span>
+                    <h2>人文</h2>
+                    <span class="count">0条</span>
+                </div>
+                <div class="column-body">
+                    <p style="color:#aaa;padding:20px;font-size:14px;">暂无新闻</p>
+                </div>
+            </div>
+
+            <div class="column">
+                <div class="column-header">
+                    <span class="column-dot dot-military"></span>
+                    <h2>军事</h2>
+                    <span class="count">0条</span>
+                </div>
+                <div class="column-body">
+                    <p style="color:#aaa;padding:20px;font-size:14px;">暂无新闻</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="summary-section">
+            <h2>今日总结与启示</h2>
+            <div class="summary-macro">
+                <h3>宏观视角</h3>
+                <p>国际政治格局持续演变，政治领域的动态反映出大国博弈与多边合作并行推进的趋势。。全球经济形势复杂多变，经济数据表明市场正在寻找新的平衡点。。</p>
+            </div>
+            <div class="summary-micro">
+                <h3>微观洞察</h3>
+                <p>政策走向和外交信号的细微变化，往往蕴含着深远的战略意图。。资本流向和消费趋势的微妙变动，折射出市场主体对未来的预期与信心。。</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>每日早 10 点自动更新 &nbsp;·&nbsp; 数据来源：主流新闻媒体 &nbsp;·&nbsp; 仅供参考</p>
+            <span>Made with care for daily reading</span>
+        </div>
+
+    </div>
+</body>
+</html>
