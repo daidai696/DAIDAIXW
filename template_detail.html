@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新闻详情 — 每日新闻速递</title>
+    <style>
+        :root {
+            --bg: #f6f5f3;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-secondary: #4a4a4a;
+            --text-muted: #8c8c8c;
+            --border: #e6e3dd;
+            --summary-bg: #1e1b18;
+            --accent: #2563eb;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+        }
+        .container { max-width: 720px; margin: 0 auto; padding: 32px 20px 60px; }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 22px;
+            font-weight: 500;
+            transition: color .2s;
+        }
+        .back-link:hover { color: var(--text); }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 34px 30px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+        .card .title {
+            font-size: 23px;
+            font-weight: 800;
+            line-height: 1.45;
+            color: var(--text);
+            margin-bottom: 14px;
+        }
+        .card .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 24px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--border);
+        }
+        .card .meta span {
+            font-size: 13px;
+            background: #f0eeea;
+            color: #5c554d;
+            padding: 4px 12px;
+            border-radius: 4px;
+        }
+
+        .detail-block {
+            margin-bottom: 16px;
+        }
+        .detail-block .dlbl {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .detail-block .dlbl::before {
+            content: '';
+            display: inline-block;
+            width: 5px;
+            height: 5px;
+            background: var(--accent);
+            border-radius: 50%;
+            margin-right: 8px;
+            vertical-align: middle;
+            position: relative;
+            top: -1px;
+        }
+        .detail-block .dctn {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            padding-left: 13px;
+        }
+
+        .original-link {
+            margin-top: 24px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
+        }
+        .original-link a {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .original-link a:hover { text-decoration: underline; }
+
+        .insight-card {
+            background: var(--summary-bg);
+            border-radius: 12px;
+            padding: 26px 30px;
+            color: #dcd6cc;
+            margin-bottom: 20px;
+        }
+        .insight-card h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #dba959;
+            margin-bottom: 10px;
+        }
+        .insight-card p {
+            font-size: 14px;
+            line-height: 1.9;
+            color: #bfb5a6;
+        }
+
+        .related-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px 30px;
+            border: 1px solid var(--border);
+        }
+        .related-card h3 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text);
+        }
+        .related-item {
+            padding: 13px 0;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-secondary);
+            transition: all .2s;
+        }
+        .related-item:last-child { border-bottom: none; }
+        .related-item:hover { color: var(--accent); padding-left: 6px; }
+
+        .footer {
+            text-align: center;
+            margin-top: 32px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .card { padding: 22px 18px; }
+            .card .title { font-size: 19px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="daily-news.html" class="back-link">← 返回新闻列表</a>
+
+        <div class="card">
+            <h1 class="title" id="detail-title">加载中...</h1>
+            <div class="meta" id="detail-meta"></div>
+            <div id="detail-content"></div>
+            <div class="original-link" id="detail-link"></div>
+        </div>
+
+        <div class="insight-card">
+            <h3>新闻启示</h3>
+            <p id="detail-insight"></p>
+        </div>
+
+        <div class="related-card">
+            <h3>同类新闻</h3>
+            <div id="related-list"></div>
+        </div>
+
+        <div class="footer">
+            每日新闻速递 &nbsp;·&nbsp; 信息来源：主流新闻媒体
+        </div>
+    </div>
+
+    <script>
+        var newsData = {{{NEWS_DATA}}};
+
+        var catNames = {
+            tech: '科技', economy: '经济', politics: '政治',
+            humanities: '人文', military: '军事'
+        };
+
+        (function () {
+            var p = new URLSearchParams(window.location.search);
+            var id = parseInt(p.get('n') || p.get('news') || '1');
+            var news = newsData[id];
+
+            if (!news) {
+                document.getElementById('detail-title').textContent = '新闻未找到';
+                return;
+            }
+
+            document.getElementById('detail-title').textContent = news.title;
+            document.getElementById('detail-meta').innerHTML =
+                '<span>' + news.source + '</span>' +
+                '<span>' + (catNames[news.cat] || news.cat) + '</span>';
+
+            var html = '';
+            if (news.details) {
+                for (var i = 0; i < news.details.length; i++) {
+                    var d = news.details[i];
+                    html += '<div class="detail-block"><div class="dlbl">' + d.label +
+                        '</div><div class="dctn">' + d.content + '</div></div>';
+                }
+            }
+            document.getElementById('detail-content').innerHTML = html;
+
+            if (news.url && news.url !== '#') {
+                document.getElementById('detail-link').innerHTML =
+                    '<a href="' + news.url + '" target="_blank" rel="noopener">查看原文 →</a>';
+            }
+
+            document.getElementById('detail-insight').textContent =
+                news.insight || '持续关注该领域最新动态。';
+
+            var related = [];
+            for (var k in newsData) {
+                if (parseInt(k) !== id && newsData[k].cat === news.cat) {
+                    related.push(k);
+                }
+            }
+            related = related.slice(0, 5);
+            var relHtml = '';
+            for (var r = 0; r < related.length; r++) {
+                var rk = related[r];
+                relHtml += '<div class="related-item" onclick="location.href=\'news-detail.html?n=' +
+                    rk + '\'">' + newsData[rk].title + '</div>';
+            }
+            document.getElementById('related-list').innerHTML =
+                relHtml || '<div style="color:var(--text-muted);font-size:14px;">暂无同类新闻</div>';
+        })();
+    </script>
+</body>
+</html>
