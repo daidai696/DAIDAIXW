@@ -292,7 +292,7 @@ def compose_daily_summary(enriched_news):
         'humanities': '人文社会领域涉及{}，{}{}',
     }
     cat_micro_templates = {
-        'politics': '从{}等消息可以看出，{}',
+        'politics': '{}等消息显示国际政治格局正在发生深刻调整，各方博弈进入新阶段。',
         'economy': '{}等动态提示我们，市场主体需关注政策节奏与结构性机会。',
         'tech': '{}等技术突破表明，深耕自主创新仍是长期竞争力的关键。',
         'military': '{}等动向提醒我们，安全与发展需统筹兼顾。',
