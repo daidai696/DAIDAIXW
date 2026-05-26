@@ -638,7 +638,7 @@ def escape_js_string(s):
     return s.replace('\\', '\\\\').replace('"', '\\"').replace('\n', ' ').replace('\r', '')
 
 
-def update_html_template(enriched_news, summary_html):
+def update_html_template(enriched_news, summary_html, use_fallback=False):
     date_str = datetime.now().strftime("%Y年%m月%d日")
 
     news_items_html = {}
@@ -713,6 +713,9 @@ def update_html_template(enriched_news, summary_html):
 
     main_html = main_html.replace('{{DATE}}', date_str)
     main_html = main_html.replace('{{SUMMARY}}', summary_html)
+    main_html = main_html.replace('{{FALLBACK_NOTICE}}',
+        '<div style="background:linear-gradient(135deg, rgba(255,193,7,0.1), rgba(255,152,0,0.08));border:1px solid rgba(255,193,7,0.4);border-radius:8px;padding:14px 18px;margin-bottom:24px;font-size:13px;color:#b8860b;"><span style="font-weight:700;">⚡ 网络异常提示：</span>今日新闻源抓取失败，页面展示的是示例数据，实际新闻请关注后续更新。</div>'
+        if use_fallback else '')
 
     for cat in ['tech', 'economy', 'politics', 'humanities', 'military']:
         placeholder = f'{{{{NEWS_{cat.upper()}}}}}'
@@ -909,14 +912,22 @@ def main():
     try:
         news_data = fetch_all_news()
         total = sum(len(v) for v in news_data.values())
-        if total < 5:
-            print("\n⚠️ 爬取新闻太少，使用备用数据")
+        if total < 3:
+            print(f"\n⚠️ 只爬取到 {total} 条新闻，使用备用数据")
             news_data = get_fallback_news()
             use_fallback = True
     except Exception as e:
-        print(f"\n⚠️ 爬取出错: {str(e)}，使用备用数据")
+        print(f"\n⚠️ 爬取出错: {str(e)[:80]}，使用备用数据")
         news_data = get_fallback_news()
         use_fallback = True
+
+    if use_fallback:
+        today = datetime.now().strftime("%m月%d日")
+        fallback_news = get_fallback_news()
+        for cat, items in fallback_news.items():
+            for item in items:
+                item['title'] = item['title'].replace('X月X日', today)
+        news_data = fallback_news
 
     if use_fallback:
         enriched = []
@@ -939,7 +950,7 @@ def main():
         enriched = enrich_all_news(news_data)
 
     summary_html = compose_daily_summary(enriched)
-    update_html_template(enriched, summary_html)
+    update_html_template(enriched, summary_html, use_fallback)
 
     total_news = len(enriched)
     total_with_content = sum(1 for n in enriched if n['overview'])
