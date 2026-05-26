@@ -416,12 +416,12 @@ def compose_daily_summary(enriched_news):
         )
 
         if idx > 0 and idx < 4:
-            transition = THEME_TRANSITIONS[idx % len(THEME_TRANSITIONS)]
+            transition = THEME_TRANSITIONS[(idx - 1) % len(THEME_TRANSITIONS)]
+            para = (f'{transition}{news_snippet}等消息构成了{config.get("desc_prefix", cluster_name)}'
+                    f'的主要看点。{insight}')
         else:
-            transition = '今日'
-
-        para = (f'{transition}，{news_snippet}等消息构成了{config.get("desc_prefix", cluster_name)}'
-                f'的主要看点。{insight}')
+            para = (f'今日，{news_snippet}等消息构成了{config.get("desc_prefix", cluster_name)}'
+                    f'的主要看点。{insight}')
         paragraphs.append(para)
         used_themes.add(angle)
 
