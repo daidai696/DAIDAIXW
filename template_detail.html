@@ -121,25 +121,6 @@
             margin-bottom: 22px;
         }
 
-        .insight-card {
-            background: var(--summary-bg);
-            border-radius: 12px;
-            padding: 26px 30px;
-            color: #dcd6cc;
-            margin-bottom: 20px;
-        }
-        .insight-card h3 {
-            font-size: 15px;
-            font-weight: 700;
-            color: #dba959;
-            margin-bottom: 10px;
-        }
-        .insight-card p {
-            font-size: 14px;
-            line-height: 1.9;
-            color: #bfb5a6;
-        }
-
         .related-card {
             background: var(--card);
             border-radius: 12px;
@@ -186,11 +167,6 @@
             <div class="detail-overview" id="detail-overview"></div>
             <div id="detail-content"></div>
             <div class="original-link" id="detail-link"></div>
-        </div>
-
-        <div class="insight-card">
-            <h3>新闻启示</h3>
-            <p id="detail-insight"></p>
         </div>
 
         <div class="related-card">
@@ -246,9 +222,6 @@
                 document.getElementById('detail-link').innerHTML =
                     '<a href="' + news.url + '" target="_blank" rel="noopener">查看原文 →</a>';
             }
-
-            document.getElementById('detail-insight').textContent =
-                news.insight || '持续关注该领域最新动态。';
 
             var related = [];
             for (var k in newsData) {
