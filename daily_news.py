@@ -170,7 +170,7 @@ def _fetch_rss_news(source):
             news_list.append({
                 'title': title,
                 'source': source_name,
-                'url': url,
+                'url': '#',
             })
             if len(news_list) >= 6:
                 break
@@ -370,54 +370,32 @@ THEME_CLUSTERS = {
     },
 }
 
-THEME_INSIGHT_TEMPLATES = {
-
+THEME_INSIGHT_CONCISE = {
     '政策信号与治理方向': [
-        '这些政策信号表明决策层正在{angle}方向上持续发力，相关领域的配套措施有望在短期内密集落地，对于{impact_group}而言意味着明确的制度红利与规则重塑。',
-        '从政策连贯性来看，{angle}相关部署并非孤立动作，而是战略框架下的有机组成部分，后续实施细则的出台节奏将直接影响市场预期与产业布局。',
+        '决策层在{angle}方向持续发力，配套措施有望密集落地，对{impact_group}而言意味着制度红利与规则重塑。',
+        '{angle}相关部署是战略框架的有机组成，后续细则出台节奏将直接影响市场预期与产业布局。',
     ],
-
     '经济走势与市场信号': [
-        '从这些经济数据与市场信号中可以看到，{angle}正在成为当前经济运行的关键变量。市场主体需要关注政策传导的时滞效应，在短期波动中把握结构性机会。',
-        '当前经济数据反映出{angle}领域的边际变化值得重视。资金流向与板块轮动暗示着市场正在对中长期增长逻辑进行重新定价。',
+        '{angle}成为当前经济运行关键变量，需关注政策传导时滞，在短期波动中把握结构性机会。',
+        '{angle}领域边际变化值得重视，资金流向与板块轮动暗示市场正对中长期增长逻辑重新定价。',
     ],
-
     '科技突破与产业变革': [
-        '这几条科技动态共同勾勒出{angle}方向上的加速演进态势。技术从实验室到产品化的周期正在缩短，率先完成技术卡位与生态建设的企业将获得显著的先发优势。',
-        '{angle}领域的技术突破不是孤例，而是产业链协同升级的缩影。这意味着相关上下游企业都将面临能力重构的压力与机遇。',
+        '{angle}方向加速演进，技术从实验室到产品化周期缩短，率先完成生态建设的企业将获先发优势。',
+        '{angle}技术突破是产业链协同升级的缩影，上下游企业均面临能力重构的压力与机遇。',
     ],
-
     '国际格局与地缘动态': [
-        '{angle}方面的最新动向反映出国际力量对比的持续变化。对于外贸企业和跨境投资者而言，地缘政治风险正在成为必须纳入决策模型的核心变量。',
-        '围绕{angle}的多方博弈进入微妙阶段，短期内可能加剧市场波动，中长期则可能重塑全球供应链格局和区域合作框架。',
+        '{angle}动向反映国际力量对比持续变化，地缘政治风险正成为外贸企业和跨境投资者的核心决策变量。',
+        '围绕{angle}的多方博弈短期内将加剧市场波动，中长期可能重塑全球供应链格局。',
     ],
-
     '民生关切与社会脉动': [
-        '{angle}领域的进展折射出社会治理重心正在向提质增效转变。这不仅关系到民众的获得感，也将催生新的服务业态和消费增长点。',
-        '从{angle}议题的热度与政策跟进来看，民生领域正在从\"有没有\"向\"好不好\"过渡，这一转向本身蕴含着巨大的社会投资机遇。',
+        '{angle}领域进展折射社会治理重心向提质增效转变，将催生新服务业态和消费增长点。',
+        '{angle}议题热度表明民生从\"有没有\"向\"好不好\"过渡，这一转向蕴含社会投资机遇。',
     ],
 }
 
-THEME_TRANSITIONS = [
-    '值得关注的是，',
-    '与此同时，',
-    '另一个值得注意的信号是，',
-    '从更大的视野来看，',
-    '在另一条线索上，',
-    '将这些信息放在一起审视，不难发现',
-    '值得深思的是，',
-    '进一步看，',
-]
-
-THEME_CLOSING = [
-    '总体而言，今日的新闻图景折射出一个正在深刻调整的世界——政策在精细化、市场在结构性分化、技术在加速渗透、国际秩序在持续重组。在这种复杂环境中，保持信息敏锐度与独立思考能力，比以往任何时候都更加重要。',
-    '纵观今日各领域的动态，一个共同的主线逐渐清晰：变革正在从各个维度同时推进，而真正的机会往往隐藏在看似不相关的新闻线索之间的交叉地带。',
-    '今天的这些新闻共同提醒我们，当下的世界正处于多重转型叠加的关键时期——每一个领域的变化都不是孤立的，理解其间的联动关系，才能更准确地把握方向。',
-]
-
 
 def compose_daily_summary(enriched_news):
-    """基于所有新闻内容，进行主题归类、关联分析，撰写300-500字深度总结"""
+    """精简总结：按主题归类，每层1-2句核心分析，去除标题罗列和过渡语"""
     if not enriched_news:
         return '<p>今日暂无足够信息生成深度总结，请浏览各栏目新闻卡片了解详情。</p>'
 
@@ -443,57 +421,36 @@ def compose_daily_summary(enriched_news):
                 active_clusters.append((cluster_name, unique))
 
     if not active_clusters:
-
         by_cat = {}
         for n in enriched_news:
             by_cat.setdefault(n['cat'], []).append(n)
-        cat_order = ['politics', 'economy', 'tech', 'military', 'humanities']
-        for cat in cat_order:
+        for cat in ['politics', 'economy', 'tech', 'military', 'humanities']:
             items = by_cat.get(cat, [])
             if items:
-                titles = '、'.join(n['title'] for n in items[:3])
                 active_clusters.append((f'{CATEGORY_NAMES.get(cat, cat)}领域', items[:4]))
 
-    cross_links = _find_cross_links(active_clusters)
-
-    paragraphs = []
-    used_themes = set()
-
-    for idx, (cluster_name, news_list) in enumerate(active_clusters[:4]):
+    lines = []
+    for idx, (cluster_name, news_list) in enumerate(active_clusters[:5]):
         config = THEME_CLUSTERS.get(cluster_name, {'desc_prefix': cluster_name})
         angle = _extract_cluster_angle(cluster_name, news_list)
+        prefix = config.get('desc_prefix', cluster_name)
+        impact_group = _guess_impact_group(cluster_name, news_list)
 
-        titles_for_para = [n['title'] for n in news_list[:3]]
-
-        news_snippet = '、'.join(titles_for_para)
-
-        insight_templates = THEME_INSIGHT_TEMPLATES.get(
+        templates = THEME_INSIGHT_CONCISE.get(
             cluster_name,
-            ['{}方面的动态值得持续跟踪。']
+            ['{}方面，{angle}趋势明显，值得关注。']
         )
-        insight = insight_templates[idx % len(insight_templates)].format(
-            angle=angle,
-            impact_group=_guess_impact_group(cluster_name, news_list)
-        )
+        insight = templates[idx % len(templates)].format(angle=angle, impact_group=impact_group)
 
-        if idx > 0 and idx < 4:
-            transition = THEME_TRANSITIONS[(idx - 1) % len(THEME_TRANSITIONS)]
-            para = (f'{transition}{news_snippet}等消息构成了{config.get("desc_prefix", cluster_name)}'
-                    f'的主要看点。{insight}')
-        else:
-            para = (f'今日，{news_snippet}等消息构成了{config.get("desc_prefix", cluster_name)}'
-                    f'的主要看点。{insight}')
-        paragraphs.append(para)
-        used_themes.add(angle)
+        lines.append(f'<strong>{prefix}</strong>：{insight}')
 
-    if cross_links:
-        paragraphs.append(cross_links)
+    lines.append(
+        '综合来看，今日各领域动态共同指向一个正在深刻调整的世界——政策在精细化、'
+        '市场在结构性分化、技术在加速渗透、国际秩序在持续重组。'
+        '在这多重转型叠加的关键时期，理解不同领域间的联动关系，才能更准确地把握方向。'
+    )
 
-    closing = THEME_CLOSING[len(paragraphs) % len(THEME_CLOSING)]
-    paragraphs.append(closing)
-
-    html_paragraphs = ''.join(f'<p>{p}</p>' for p in paragraphs)
-    return html_paragraphs
+    return ''.join(f'<p class="summary-line">{l}</p>' for l in lines)
 
 
 def _extract_cluster_angle(cluster_name, news_list):
@@ -616,83 +573,6 @@ def _guess_impact_group(cluster_name, news_list):
             if kw in full_text:
                 return group_name
     return candidates[0][0]
-
-
-def _find_cross_links(active_clusters):
-
-    cluster_texts = {}
-    for cluster_name, news_list in active_clusters:
-        cluster_texts[cluster_name] = ' '.join(
-            n['title'] + ' ' + n.get('overview', '') for n in news_list
-        )
-
-    cross_patterns = [
-        {
-            'pair': ('政策信号与治理方向', '经济走势与市场信号'),
-            'template': (
-                '将政策信号与经济数据结合起来看，{policy_angle}的政策取向与{eco_angle}的市场表现'
-                '之间存在清晰的传导逻辑：政策意图正在通过多层次工具向实体经济渗透，'
-                '市场反馈又反过来影响后续政策的力度与节奏。理解这种互动关系，'
-                '有助于在不确定中把握确定性。'
-            ),
-        },
-        {
-            'pair': ('科技突破与产业变革', '经济走势与市场信号'),
-            'template': (
-                '科技突破与经济表现之间正在形成更紧密的正反馈循环：{tech_angle}方面的进展'
-                '为资本市场提供了新的叙事主线，而资本对技术赛道的持续押注'
-                '又加速了产业化进程。这种循环的强度与可持续性，将是判断当前创新周期质量的重要标尺。'
-            ),
-        },
-        {
-            'pair': ('政策信号与治理方向', '科技突破与产业变革'),
-            'template': (
-                '值得注意的是，{policy_angle}的政策导向与{tech_angle}的技术突破并非平行发展——'
-                '政策在不动声色地为技术创新划定跑道，而技术的进展又在倒逼规则更新。'
-                '政策与技术的关系正在从\"先发展后规范\"向\"边发展边规范\"演进。'
-            ),
-        },
-        {
-            'pair': ('国际格局与地缘动态', '经济走势与市场信号'),
-            'template': (
-                '国际层面的{geo_angle}动态与经济数据之间存在深层联动：地缘政治的不确定性'
-                '正在通过大宗商品价格、供应链稳定性和市场风险偏好等多个渠道影响经济运行，'
-                '企业和投资者需要将地缘风险评估纳入常规决策框架。'
-            ),
-        },
-        {
-            'pair': ('民生关切与社会脉动', '政策信号与治理方向'),
-            'template': (
-                '{policy_angle}的政策部署与{society_angle}的民生关切形成了有意义的呼应——'
-                '政策的着力点正在精准对焦民众的真实需求，这种\"自上而下\"与\"自下而上\"的共振'
-                '是社会治理效能提升的典型表现。'
-            ),
-        },
-    ]
-
-    short_names = {
-        '政策信号与治理方向': ('policy', 'policy_angle'),
-        '经济走势与市场信号': ('eco', 'eco_angle'),
-        '科技突破与产业变革': ('tech', 'tech_angle'),
-        '国际格局与地缘动态': ('geo', 'geo_angle'),
-        '民生关切与社会脉动': ('society', 'society_angle'),
-    }
-
-    cluster_names_present = [cn for cn, _ in active_clusters]
-
-    for pattern in cross_patterns:
-        pair = pattern['pair']
-        if pair[0] in cluster_names_present and pair[1] in cluster_names_present:
-            template = pattern['template']
-            angle_vars = {}
-            for cn, nl in active_clusters:
-                if cn == pair[0]:
-                    angle_vars[short_names[cn][1]] = _extract_cluster_angle(cn, nl)
-                elif cn == pair[1]:
-                    angle_vars[short_names[cn][1]] = _extract_cluster_angle(cn, nl)
-            return template.format(**angle_vars)
-
-    return ''
 
 
 def escape_js_string(s):
@@ -1022,15 +902,16 @@ def get_fallback_news():
 
 
 def generate_fallback_overview(title, cat):
-    """为备用新闻生成概述"""
+    """为备用新闻生成简洁概述（时间+地点+主体+事件格式）"""
+    today_str = datetime.now().strftime("%m月%d日")
     templates = {
-        'politics': '围绕"{title}"这一主题，相关各方正在积极推进。此事件在国际国内引发了广泛关注和讨论，后续发展值得密切关注。',
-        'economy': '"{title}"这一消息引发市场各方关注。当前经济环境下，此类动态对行业预期和政策方向具有重要参考价值。',
-        'tech': '"{title}"标志着相关领域技术取得重要进展，或将推动行业格局发生变化，值得持续跟踪后续落地情况。',
-        'military': '"{title}"是国防军事领域的重要动态，体现了国家安全能力建设的持续推进。',
-        'humanities': '"{title}"展现了社会民生和精神文化层面的新进展，折射出人民群众对美好生活的共同追求。',
+        'politics': f'{today_str}，相关部门就"{title}"作出最新部署。此举旨在推动政策落地见效，后续实施细则值得关注。',
+        'economy': f'{today_str}，"{title}"引发市场关注。当前经济环境下，该动态对行业预期和政策方向具有参考价值。',
+        'tech': f'{today_str}，"{title}"取得重要进展，标志着相关领域技术加速向产业化迈进。',
+        'military': f'{today_str}，"{title}"是国防安全领域的重要动态，体现能力建设的持续推进。',
+        'humanities': f'{today_str}，"{title}"展现社会民生和文化领域新进展，折射公众对美好生活的共同追求。',
     }
-    return templates.get(cat, '该新闻值得关注与深入思考。').format(title=title)
+    return templates.get(cat, f'{today_str}，该新闻值得关注与深入思考。')
 
 
 def main():
