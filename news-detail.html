@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新闻详情 — 每日新闻速递</title>
+    <style>
+        :root {
+            --bg: #f6f5f3;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-secondary: #4a4a4a;
+            --text-muted: #8c8c8c;
+            --border: #e6e3dd;
+            --summary-bg: #1e1b18;
+            --accent: #2563eb;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+        }
+        .container { max-width: 720px; margin: 0 auto; padding: 32px 20px 60px; }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 22px;
+            font-weight: 500;
+            transition: color .2s;
+        }
+        .back-link:hover { color: var(--text); }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 34px 30px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+        .card .title {
+            font-size: 23px;
+            font-weight: 800;
+            line-height: 1.45;
+            color: var(--text);
+            margin-bottom: 14px;
+        }
+        .card .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 24px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--border);
+        }
+        .card .meta span {
+            font-size: 13px;
+            background: #f0eeea;
+            color: #5c554d;
+            padding: 4px 12px;
+            border-radius: 4px;
+        }
+
+        .detail-block {
+            margin-bottom: 16px;
+        }
+        .detail-block .dlbl {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .detail-block .dlbl::before {
+            content: '';
+            display: inline-block;
+            width: 5px;
+            height: 5px;
+            background: var(--accent);
+            border-radius: 50%;
+            margin-right: 8px;
+            vertical-align: middle;
+            position: relative;
+            top: -1px;
+        }
+        .detail-block .dctn {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            padding-left: 13px;
+        }
+
+        .original-link {
+            margin-top: 24px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
+        }
+        .original-link a {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .original-link a:hover { text-decoration: underline; }
+
+        .detail-overview {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.9;
+            padding: 16px 20px;
+            background: #faf9f7;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent);
+            margin-bottom: 22px;
+        }
+
+        .insight-card {
+            background: var(--summary-bg);
+            border-radius: 12px;
+            padding: 26px 30px;
+            color: #dcd6cc;
+            margin-bottom: 20px;
+        }
+        .insight-card h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #dba959;
+            margin-bottom: 10px;
+        }
+        .insight-card p {
+            font-size: 14px;
+            line-height: 1.9;
+            color: #bfb5a6;
+        }
+
+        .related-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px 30px;
+            border: 1px solid var(--border);
+        }
+        .related-card h3 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text);
+        }
+        .related-item {
+            padding: 13px 0;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-secondary);
+            transition: all .2s;
+        }
+        .related-item:last-child { border-bottom: none; }
+        .related-item:hover { color: var(--accent); padding-left: 6px; }
+
+        .footer {
+            text-align: center;
+            margin-top: 32px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .card { padding: 22px 18px; }
+            .card .title { font-size: 19px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="daily-news.html" class="back-link">← 返回新闻列表</a>
+
+        <div class="card">
+            <h1 class="title" id="detail-title">加载中...</h1>
+            <div class="meta" id="detail-meta"></div>
+            <div class="detail-overview" id="detail-overview"></div>
+            <div id="detail-content"></div>
+            <div class="original-link" id="detail-link"></div>
+        </div>
+
+        <div class="insight-card">
+            <h3>新闻启示</h3>
+            <p id="detail-insight"></p>
+        </div>
+
+        <div class="related-card">
+            <h3>同类新闻</h3>
+            <div id="related-list"></div>
+        </div>
+
+        <div class="footer">
+            每日新闻速递 &nbsp;·&nbsp; 信息来源：主流新闻媒体
+        </div>
+    </div>
+
+    <script>
+        var newsData = {
+        1: {title: "AI赋能丨仿真系统打造重载列车司机“练兵场” - 中国科技网", source: "中国科技网", url: "https://news.google.com/rss/articles/CBMicEFVX3lxTE84M2FxUmhJUlFNaWtpZzU2Sm1rQ1R6ZndnbFc4UjRqMUU4cnFsRHRIRWdPOTBTUjVEUms5S1QzZmpWeFFyNXNwNXJnYWJZV1RVazh3N2ZMRGxKdDVuR1B4a3c5ZU1Na2s0QUs0Z3M0emw?oc=5", cat: "tech", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "“AI赋能丨仿真系统打造重载列车司机“练兵场” - 中国科技网”这一动态传递的核心信号是：出现值得关注的变化。对于相关各方而言，这意味着技术路线和市场格局可能出现实质性变化。从趋势上看，该事件的后续发展，值得持续跟踪。"},
+        2: {title: "3年做出35亿市值公司：张丁文的AI造富神话 - 新京报", source: "新京报", url: "https://news.google.com/rss/articles/CBMiZEFVX3lxTFBsQUtrdzVlaktfMlhlR2oxcS1SWnk5UTBIamVDd1Z6aUpOaWxsY0lyMGMxazh1WlFrbzY0T0JHQ0xUWktWWW9LaEpBd1BOM2xCTXAxdWVjaEdLem85cjNWejVhT3Y?oc=5", cat: "tech", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "“3年做出35亿市值公司：张丁文的AI造富神话 - 新京报”这一动态传递的核心信号是：出现值得关注的变化。对于投资者和资本市场而言，这意味着技术路线和市场格局可能出现实质性变化。从趋势上看，该事件的后续发展，值得持续跟踪。"},
+        3: {title: "“AI+文化”深度融合 - epaper.nfnews.com", source: "epaper.nfnews.com", url: "https://news.google.com/rss/articles/CBMiekFVX3lxTE1vYmZqTm9MUTJXNFNpVHIzTU5qRGM0M1h6ejN2eDA4dXNzbXBnM1V5Q3NGMmFXaXBpYVJhSkRxZUdrUjlGOUNxZnM0ZXhHMi1yWjlIeHN4cnN4ZlZieFVZYUFGVy1IMy05Q19ZdkpYYzVfOUhBU3RfaHZ3?oc=5", cat: "tech", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "““AI+文化”深度融合 - epaper.nfnews.com”这一动态传递的核心信号是：出现值得关注的变化。对于相关各方而言，这意味着技术路线和市场格局可能出现实质性变化。从趋势上看，该事件的后续发展，值得持续跟踪。"},
+        4: {title: "“致远启新·湾区领航| AI、跨境与硬科技产业”第五届中国（深圳）行业发展论坛举办_交大要闻 - 上海交通大学 新闻网", source: "上海交通大学 新闻网", url: "https://news.google.com/rss/articles/CBMiX0FVX3lxTFBuaGRyNzBCMUJ4RE1KazJyQUZTcWlCd00xbXNKQVAxT09xbUM1dDc4LWM1UkViWVdtSkdzX1czelIza0ZPSU8ydW5vdHduWE8tZTZGQmZLekc1a21FT3lz?oc=5", cat: "tech", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "““致远启新·湾区领航| AI、跨境与硬科技产业”第五届中国（深圳）行业发展论坛举办_交大要闻 - 上海交通大学 新闻网”这一动态传递的核心信号是：出现值得关注的变化。对于相关行业和企业而言，这意味着技术路线和市场格局可能出现实质性变化。从趋势上看，行业洗牌和竞争格局可能加速演变，值得持续跟踪。"},
+        5: {title: "“港版纳指”掉队 恒生科技指数迎来“AI化”重估 - 新浪财经", source: "新浪财经", url: "https://news.google.com/rss/articles/CBMieEFVX3lxTE5kOWFGREdKTUR6QmpsZFdnU3pqME5UOEhMVTVGWFhCMC1yWUl5cVJsTlFwSnJNY19yelhabmVaZjA5enVlZlYwY0g4TXhRa3RUS2lzLXVTWjYtcnpvTGFIRHNTNEJMd3lmbm1vVXVrVHg0VUtDbTh0eg?oc=5", cat: "tech", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "““港版纳指”掉队 恒生科技指数迎来“AI化”重估 - 新浪财经”这一动态传递的核心信号是：出现值得关注的变化。对于相关各方而言，这意味着技术路线和市场格局可能出现实质性变化。从趋势上看，该事件的后续发展，值得持续跟踪。"},
+        6: {title: "中韩企业可持续发展交流会", source: "新浪财经", url: "https://finance.sina.com.cn/zt_d/subject-1779436049/?amp=&ver=cj&wm=6121", cat: "economy", overview: "由新浪财经、洋河股份主办，中国国际商会协办的“可持续全球领导者大会海外专场 中韩企业可持续发展交流会”活动于5月26日-5月28日在韩国首尔举行，主题为“融聚·共赢”。", details: [{"label": "行业影响", "content": "由新浪财经、洋河股份主办，中国国际商会协办的“可持续全球领导者大会海外专场 中韩企业可持续发展交流会”活动于5月26日-5月28日在韩国首尔举行，主题为“融聚·共赢”。"}, {"label": "核心数据", "content": "由新浪财经、洋河股份主办，中国国际商会协办的“可持续全球领导者大会海外专场 中韩企业可持续发展交流会”活动于5月26日-5月28日在韩国首尔举行，主题为“融聚·共赢”。"}], insight: "“中韩企业可持续发展交流会”释放的关键信息在于出现值得关注的变化。对外贸和跨境从业者来说，这条消息提示关注政策节奏与资金流向的变化。前瞻来看，国际博弈态势和各方后续反应将影响走向，建议保持跟踪。"},
+        7: {title: "深化全球金融治理合作 - 中国经济网", source: "中国经济网", url: "https://news.google.com/rss/articles/CBMib0FVX3lxTE01d3FLVXFNMVNoWlBxa21BSUNuXzFscVg0N1BlYnR6bEFZOUFKM2ZCdnlfYlVLM19WV0EtVlQ5RG10NTJiMGhpQ2pwRmYxOUp2UGlLaFZHeHhMUjBHbHk2NmtOSUJDT3ctMk9DYlNFMA?oc=5", cat: "economy", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "“深化全球金融治理合作 - 中国经济网”释放的关键信息在于国际关系调整。对相关各方来说，这条消息提示关注政策节奏与资金流向的变化。前瞻来看，该事件的后续发展，建议保持跟踪。"},
+        8: {title: "【2026清华五道口全球金融论坛】主题论坛：2026中国经济展望暨《中国金融政策报告2026》发布 - tsinghua.edu.cn", source: "tsinghua.edu.cn", url: "https://news.google.com/rss/articles/CBMiXEFVX3lxTE9acURjYmpHNVdUT3JnOUdSNnFJeHJGNFFLTmo3aDItcTJuZ0tCUkYzc2h2RE1sTm52SUJHODF0b05NMy1BTjZWa3o1TllVRmVLREtxYXVpbk1TMG52?oc=5", cat: "economy", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "“【2026清华五道口全球金融论坛】主题论坛：2026中国经济展望暨《中国金融政策报告2026》发布 - tsinghua.edu.cn”释放的关键信息在于政策密集出台。对政策制定和监管部门来说，这条消息提示关注政策节奏与资金流向的变化。前瞻来看，政策细则和落地节奏将成为关键观察点，建议保持跟踪。"},
+        9: {title: "五个方面入手，着力提升金融服务实体经济的精准性 - 求是", source: "求是", url: "https://news.google.com/rss/articles/CBMifEFVX3lxTFBpTWMxS0l0bkg0dGpMOUNPVXc1ZmhXQVNma0FaNDh1OW5ZVTA3OExKN1hlYmN1U2hZNGRrbldNRWh5WFhrWUtVTUdPekV5cV9IVzYybGExbG9QSlY4TTJ3M0FwYXgtV3FKZWZ4R1NtS3BuN3ZYdVltSEZYaEs?oc=5", cat: "economy", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "“五个方面入手，着力提升金融服务实体经济的精准性 - 求是”释放的关键信息在于民生持续改善。对普通消费者和居民来说，这条消息提示关注政策节奏与资金流向的变化。前瞻来看，该事件的后续发展，建议保持跟踪。"},
+        10: {title: "十档level2行情", source: "新浪财经", url: "http://stock.finance.sina.com.cn/hkstock/view/stock.php?code=00005&level2=1", cat: "economy", overview: "最近60天内有4个研究报告发布汇丰控股（00005）评级，综合评级如下：。", details: [{"label": "核心数据", "content": "最近60天内有4个研究报告发布汇丰控股（00005）评级，综合评级如下：。"}, {"label": "市场反应", "content": "最近60天内有4个研究报告发布汇丰控股（00005）评级，综合评级如下：。"}], insight: "“十档level2行情”释放的关键信息在于政策密集出台。对相关各方来说，这条消息提示关注政策节奏与资金流向的变化。前瞻来看，该事件的后续发展，建议保持跟踪。"},
+        11: {title: "如何理解文化自信的这一根本性意义？", source: "新华网", url: "http://www.xinhuanet.com/comments/20220604/1f747dd82f284b56849e5d5302d84f22/c.html", cat: "politics", overview: "《理学院》之【100秒漫谈斯理】系列之104：。《中共中央关于党的百年奋斗重大成就和历史经验的决议》指出，“文化自信是更基础、更广泛、更深厚的自信，是一个国家、一个民族发展中最基本、最深沉、最持久的力量”。这深刻揭示了文化自信对一个国家、一个民族发展所具有的根本性意义。", details: [{"label": "政策要点", "content": "《中共中央关于党的百年奋斗重大成就和历史经验的决议》指出，“文化自信是更基础、更广泛、更深厚的自信，是一个国家、一个民族发展中最基本、最深沉、最持久的力量”。"}, {"label": "重要成果", "content": "《中共中央关于党的百年奋斗重大成就和历史经验的决议》指出，“文化自信是更基础、更广泛、更深厚的自信，是一个国家、一个民族发展中最基本、最深沉、最持久的力量”。"}], insight: "“如何理解文化自信的这一根本性意义？”背后的深层逻辑是出现值得关注的变化。对于相关各方来说，这意味着战略环境或制度框架正在发生调整。展望后续，该事件的后续发展，其连锁效应值得密切关注。"},
+        12: {title: "新时代中国发展进步的成功之道", source: "新华网", url: "http://www.news.cn/comments/20220507/633c2f34e0744bddac65f88387f168f8/c.html", cat: "politics", overview: "《理学院》之【100秒漫谈斯理】系列之103：。党的十八大以来，以习近平同志为核心的党中央科学判断经济形势，提出以“创新、协调、绿色、开放、共享”为主要内容的新发展理念。今年全国两会期间，习近平总书记强调“贯彻新发展理念是新时代我国发展壮大的必由之路”，深刻揭示了新时代中国发展进步的成功之道。", details: [{"label": "趋势研判", "content": "党的十八大以来，以习近平同志为核心的党中央科学判断经济形势，提出以“创新、协调、绿色、开放、共享”为主要内容的新发展理念。"}, {"label": "政策要点", "content": "党的十八大以来，以习近平同志为核心的党中央科学判断经济形势，提出以“创新、协调、绿色、开放、共享”为主要内容的新发展理念。"}], insight: "“新时代中国发展进步的成功之道”背后的深层逻辑是出现值得关注的变化。对于科技从业者和研发机构来说，这意味着战略环境或制度框架正在发生调整。展望后续，该事件的后续发展，其连锁效应值得密切关注。"},
+        13: {title: "今日主角 | “敬二舅”刷屏：平凡之光，大有力量", source: "新华网", url: "http://www.news.cn/comments/20220728/b8859a78ad1743aeba8fdeadff3651bb/c.html", cat: "politics", overview: "每个人都是生活的主角，每个人都是时代的主角。今天我们关注的主角是他们——排除万难勇向前的人。这两天，一则名为《回村三天，二舅治好了我的精神内耗》的短视频火爆网络，与“二舅”有关的话题霸占各大热搜榜。", details: [{"label": "国际反应", "content": "今天我们关注的主角是他们——排除万难勇向前的人。"}, {"label": "政策要点", "content": "这两天，一则名为《回村三天，二舅治好了我的精神内耗》的短视频火爆网络，与“二舅”有关的话题霸占各大热搜榜。"}], insight: "“今日主角 | “敬二舅”刷屏：平凡之光，大有力量”背后的深层逻辑是社会共识凝聚。对于普通消费者和居民来说，这意味着战略环境或制度框架正在发生调整。展望后续，该事件的后续发展，其连锁效应值得密切关注。"},
+        14: {title: "开局起步“十五五”系列主题新闻发布会", source: "新华网", url: "https://www.news.cn/zt/swwxlztfbh/index.html", cat: "politics", overview: "4月28日，国务院新闻办公室举行“开局起步‘十五五’”系列主题新闻发布会，介绍加快推进气象高质量发展、高质效服务国家服务人民、保障经济社会发展有关情况。中国气象局局长陈振林表示，“十五五”时期将推动气象服务覆盖产业全链条。中国气象局局长陈振林介绍，“十五五”时期，气象部门有一个总的目标，就是到2030年，力争在气象关键领域取得重要突破。", details: [{"label": "重要成果", "content": "中国气象局局长陈振林介绍，“十五五”时期，气象部门有一个总的目标，就是到2030年，力争在气象关键领域取得重要突破。"}, {"label": "国际反应", "content": "中国气象局局长陈振林表示，“十五五”时期将推动气象服务覆盖产业全链条。"}], insight: "“开局起步“十五五”系列主题新闻发布会”背后的深层逻辑是民生持续改善。对于相关行业和企业来说，这意味着战略环境或制度框架正在发生调整。展望后续，该事件的后续发展，其连锁效应值得密切关注。"},
+        15: {title: "“清清黄河”行进式报道", source: "新华网", url: "https://www.news.cn/specials.html", cat: "politics", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "““清清黄河”行进式报道”背后的深层逻辑是出现值得关注的变化。对于相关各方来说，这意味着战略环境或制度框架正在发生调整。展望后续，该事件的后续发展，其连锁效应值得密切关注。"},
+        16: {title: "日本加速修訂國防戰略 應對中共軍事擴張 - 大纪元", source: "大纪元", url: "https://news.google.com/rss/articles/CBMiYEFVX3lxTE9YMDMzSFgtaE5LbWxtVzJHbU5mNFVuYzJzZmhHZ1lJd0QzcW1haVJJczVuYXpyaWRRSXlzOGtBVFJranNVNWtQWkJmM0NNYW96bkJ1cVluN3R6Y3l0Z1d6LdIBZkFVX3lxTFBpenV3QVVmSlMxNjdveVZvTWdZd1VlX3ZtTUVWU2pfcklhTTZUZXh4aHZaRGhFZWF2TnYyNWg3NFl2OWNXZG4yX010d3hENFFkWjlYUkpZRWhUOEVhMkFWMEZMWmJldw?oc=5", cat: "military", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "“日本加速修訂國防戰略 應對中共軍事擴張 - 大纪元”反映出的核心变化在于出现值得关注的变化。这对相关各方来说意味着安全能力或地缘态势进入新阶段。后续值得关注的是，该事件的后续发展。"},
+        17: {title: "越俄加强军事、国防法律合作 - VOV World", source: "VOV World", url: "https://news.google.com/rss/articles/CBMihwFBVV95cUxNLWlBbEl0RU1qUUdHc0k1bl92T3BFU19oakd6YTZ3TWd5ZTVCczVtZTFGN2lVNkE4b2JNSEJzZF9NMWhBQk5EVnFCejFOdjF1ZnFJTTVyR3hpam5HOE9iX3hVUWhpMzRqSFhDSmpjcHdoVjFRam1qTUlyUk9qYUY3VnoxWF9VN0U?oc=5", cat: "military", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "“越俄加强军事、国防法律合作 - VOV World”反映出的核心变化在于国际关系调整。这对相关各方来说意味着安全能力或地缘态势进入新阶段。后续值得关注的是，该事件的后续发展。"},
+        18: {title: "《国防军事天气预报》 - 天气网", source: "天气网", url: "https://news.google.com/rss/articles/CBMiggFBVV95cUxPLWFJTUNFNHpqN2Vfc09uYW42MDBfUzhpMkVscy1XZUgtRW4wU3JNOERnMFhaRjVSQ2E3eXpGRVR0RUtzUHFLZ3BkM09Hd1pSRy1kTVk3MW12ZGViQ3hUZVJPMXdNdDhiVUFBdmNRSE5RSXI3Tm0zd3ZOVWdhYUttNHpn?oc=5", cat: "military", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "“《国防军事天气预报》 - 天气网”反映出的核心变化在于出现值得关注的变化。这对相关各方来说意味着安全能力或地缘态势进入新阶段。后续值得关注的是，该事件的后续发展。"},
+        19: {title: "越南与俄罗斯联邦加强军事、国防法律领域合作 - cn.qdnd.vn", source: "cn.qdnd.vn", url: "https://news.google.com/rss/articles/CBMiUkFVX3lxTE5DT3JZcmxTN1FQcjNqWkFQTEVKQTRBUm9oWWUyOWJSY2lUQ2dKOGZZbVZpQkhVNFd4amUtWmxkbWUwS19ncV8yaUh1SU5qLVQtVkE?oc=5", cat: "military", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "“越南与俄罗斯联邦加强军事、国防法律领域合作 - cn.qdnd.vn”反映出的核心变化在于国际关系调整。这对相关各方来说意味着安全能力或地缘态势进入新阶段。后续值得关注的是，该事件的后续发展。"},
+        20: {title: "国防部强调，TNI除了战争之外，还负责军事行动的Begal - VOI.id", source: "VOI.id", url: "https://news.google.com/rss/articles/CBMiQ0FVX3lxTE5xYWVya0EyWmFnXzFRSkcwMkJURk5LOXpXcUZJb2lFVE94cDViYW53VDc3VkdnTktqV0lBNEF6N1pfYknSAUJBVV95cUxNSHFHdmdJT1RnV25HeGJBTUhkdm5jV2pzWXRGdy0xMnpCMS1qYktIR1hRLVduR1NfbW45YWlBdDZGUGc?oc=5", cat: "military", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "“国防部强调，TNI除了战争之外，还负责军事行动的Begal - VOI.id”反映出的核心变化在于出现值得关注的变化。这对相关各方来说意味着安全能力或地缘态势进入新阶段。后续值得关注的是，该事件的后续发展。"},
+        21: {title: "山西科技援疆发力 产业民生同步提质 - 中国科技网", source: "中国科技网", url: "https://news.google.com/rss/articles/CBMicEFVX3lxTFBWM3ZyUnZpdF9VSUJZQlE1ZXdBUUdCajJkTVVZZkJZb2xzU3ZPWmpucFE1c2xqOUY1OEM4NmFfbVZ3ZF91bm9ickwwQ1FqVWtoVHBHSThld0lRS2R5ZEhRZHA3MkxyMUY4cEI5RlNud3E?oc=5", cat: "humanities", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "“山西科技援疆发力 产业民生同步提质 - 中国科技网”折射出的社会意义在于出现值得关注的变化。对于相关行业和企业而言，这意味着发展理念或生活方式正在演进。未来可以期待，该事件的后续发展。"},
+        22: {title: "王毅晤泰国公主 指中方愿加强高科技、教育、民生等领域合作 - 香港電台", source: "香港電台", url: "https://news.google.com/rss/articles/CBMiiwFBVV95cUxPY3pvbEtlWGZkYjZINGZWbW5iU0xMSGZiU0tvLWduVjdSM3VJM2hDM0h0cDRFSVduZ29vMEVPM05uOU5CZjc5eGMzVDQxU1lMWTlkdWxZSnhHME81RXdLaXg2SUdNSzJEX1FsVzRNVFk5Z0Q3TmxiLTZlUDVueDR1U0pfeFVPMVcxSjln?oc=5", cat: "humanities", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "“王毅晤泰国公主 指中方愿加强高科技、教育、民生等领域合作 - 香港電台”折射出的社会意义在于国际关系调整。对于相关各方而言，这意味着发展理念或生活方式正在演进。未来可以期待，该事件的后续发展。"},
+        23: {title: "王毅会见泰国公主诗琳通 冀加强高科技教育民生等领域合作 - 香港01", source: "香港01", url: "https://news.google.com/rss/articles/CBMiswNBVV95cUxPTTB6RFJyVWhiTzY2bnBFVXB0Ym53N0VhbEhGaU8wTjB2WGdaaVVvdG5UUUs0d0RaY2JUbmNUTmxOakpFYWNpLU5yU0Fyc3JjcVlYNVhMblFiRWRCNHRPYkhZLUFLX05VUmFJWmVRYTZtUkhwQmwydjBzRi04VVhUdFl5cGhqSl9aRWcwMEloaXlDTUc1WS1GTDhKS05nWU1MS3VXQXdYbU9ZOVo4UElmMFpSNWxpSlpldzFtLURscU9oRXlVNzkySXdkSEc4aGlUd0JXUExXQlJxM2VfQ2Jpdk15VXlaQ1BYVFFJSmljbTJhRjl2a3p4NVhKSHk1alJ1Tm9Oc2Z5ZF85RDFsX2VPMVRHb29DZ21QQ2JPRENFS21ja0FsemFkRUZtc3A2TGFTOGlWMDd3QkxBbGRqX3NvNTN1VW9laVBMekRPQUVuYUlpaS0tNVYtTUhCRjZQakM3Z2g1cmd4cUtfeDZVWTh0dXBxbW11SV82Y2xmekFnYjl0Z1JnUjV4T0l1elZDek5kMlBiTjdQcF93TUdaTTdpRVlDTnREVmNPbGZjSXNKLVdjRE0?oc=5", cat: "humanities", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "“王毅会见泰国公主诗琳通 冀加强高科技教育民生等领域合作 - 香港01”折射出的社会意义在于国际关系调整。对于相关各方而言，这意味着发展理念或生活方式正在演进。未来可以期待，该事件的后续发展。"},
+        24: {title: "传承中华文脉 搭建中柬文化共鸣桥梁——民生学校开展清明节文化主题活动 - 柬中時報", source: "柬中時報", url: "https://news.google.com/rss/articles/CBMiR0FVX3lxTE1NbzFHNTNMS1g2RnhtQWJtc2ljalUyZVhKRUNMZ2ZlaDZRMTBvS2RFM0FPXzJPQ0pKeFE3ZmExZkJUdXU5VVpr?oc=5", cat: "humanities", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "“传承中华文脉 搭建中柬文化共鸣桥梁——民生学校开展清明节文化主题活动 - 柬中時報”折射出的社会意义在于出现值得关注的变化。对于相关各方而言，这意味着发展理念或生活方式正在演进。未来可以期待，该事件的后续发展。"},
+        25: {title: "乐安：“红军标语第一县” 让红色文化焕发时代光芒 - 抚州新闻网", source: "抚州新闻网", url: "https://news.google.com/rss/articles/CBMiWEFVX3lxTE9oRVJwWnlHOVNIOW9qc3RWYVZpOElwZEhQNW01QmRNMzZ6dEliOUdJcF9TQThPSUJMMXZUMFBtM3dDMVpJODdOSEMxODI2QjFGTk9fSmZ0UVM?oc=5", cat: "humanities", overview: "", details: [{"label": "新闻概述", "content": "点击查看原文了解详情。"}], insight: "“乐安：“红军标语第一县” 让红色文化焕发时代光芒 - 抚州新闻网”折射出的社会意义在于出现值得关注的变化。对于相关各方而言，这意味着发展理念或生活方式正在演进。未来可以期待，该事件的后续发展。"}
+    };
+
+        var catNames = {
+            tech: '科技', economy: '经济', politics: '政治',
+            humanities: '人文', military: '军事'
+        };
+
+        (function () {
+            var p = new URLSearchParams(window.location.search);
+            var id = parseInt(p.get('n') || p.get('news') || '1');
+            var news = newsData[id];
+
+            if (!news) {
+                document.getElementById('detail-title').textContent = '新闻未找到';
+                return;
+            }
+
+            document.getElementById('detail-title').textContent = news.title;
+            document.getElementById('detail-meta').innerHTML =
+                '<span>' + news.source + '</span>' +
+                '<span>' + (catNames[news.cat] || news.cat) + '</span>';
+
+            if (news.overview) {
+                document.getElementById('detail-overview').innerHTML = news.overview;
+            } else {
+                document.getElementById('detail-overview').style.display = 'none';
+            }
+
+            var html = '';
+            if (news.details) {
+                for (var i = 0; i < news.details.length; i++) {
+                    var d = news.details[i];
+                    html += '<div class="detail-block"><div class="dlbl">' + d.label +
+                        '</div><div class="dctn">' + d.content + '</div></div>';
+                }
+            }
+            document.getElementById('detail-content').innerHTML = html;
+
+            if (news.url && news.url !== '#') {
+                document.getElementById('detail-link').innerHTML =
+                    '<a href="' + news.url + '" target="_blank" rel="noopener">查看原文 →</a>';
+            }
+
+            document.getElementById('detail-insight').textContent =
+                news.insight || '持续关注该领域最新动态。';
+
+            var related = [];
+            for (var k in newsData) {
+                if (parseInt(k) !== id && newsData[k].cat === news.cat) {
+                    related.push(k);
+                }
+            }
+            related = related.slice(0, 5);
+            var relHtml = '';
+            for (var r = 0; r < related.length; r++) {
+                var rk = related[r];
+                relHtml += '<div class="related-item" onclick="location.href=\'news-detail.html?n=' +
+                    rk + '\'">' + newsData[rk].title + '</div>';
+            }
+            document.getElementById('related-list').innerHTML =
+                relHtml || '<div style="color:var(--text-muted);font-size:14px;">暂无同类新闻</div>';
+        })();
+    </script>
+</body>
+</html>
