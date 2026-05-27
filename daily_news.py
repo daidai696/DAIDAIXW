@@ -17,19 +17,24 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 NEWS_SOURCES = {
     'politics': [
-        {'name': '新华网', 'url': 'http://www.xinhuanet.com/politics/'},
+        {'name': '新华网', 'url': 'https://www.xinhuanet.com/politics/', 'type': 'html'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E4%B8%AD%E5%9B%BD%E6%94%BF%E6%B2%BB&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
     ],
     'economy': [
-        {'name': '新浪财经', 'url': 'https://finance.sina.com.cn/'},
+        {'name': '新浪财经', 'url': 'https://finance.sina.com.cn/', 'type': 'html'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E7%BB%8F%E6%B5%8E%E9%87%91%E8%9E%8D&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
     ],
     'tech': [
-        {'name': '36氪', 'url': 'https://36kr.com/'},
+        {'name': '36氪', 'url': 'https://36kr.com/', 'type': 'html'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E7%A7%91%E6%8A%80AI&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
     ],
     'military': [
-        {'name': '环球军事', 'url': 'https://mil.huanqiu.com/'},
+        {'name': '环球军事', 'url': 'https://mil.huanqiu.com/', 'type': 'html'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E5%86%9B%E4%BA%8B%E5%9B%BD%E9%98%B2&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
     ],
     'humanities': [
-        {'name': '澎湃新闻', 'url': 'https://www.thepaper.cn/'},
+        {'name': '澎湃新闻', 'url': 'https://www.thepaper.cn/', 'type': 'html'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E6%96%87%E5%8C%96%E6%95%99%E8%82%B2%E6%B0%91%E7%94%9F&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
     ]
 }
 
@@ -84,7 +89,16 @@ SITE_ARTICLE_SELECTORS = {
 }
 
 
+XML_CLEAN_RE = re.compile(r'<[^>]+>')
+
+
 def fetch_news_from_source(source):
+    if source.get('type') == 'rss':
+        return _fetch_rss_news(source)
+    return _fetch_html_news(source)
+
+
+def _fetch_html_news(source):
     news_list = []
     try:
         response = requests.get(source['url'], headers=HEADERS, timeout=15)
@@ -117,7 +131,54 @@ def fetch_news_from_source(source):
                 break
 
     except Exception as e:
-        print(f"  爬取 {source['name']} 失败: {str(e)[:60]}")
+        print(f"  HTML #{source['name']} 失败: {str(e)[:50]}")
+
+    return news_list
+
+
+def _fetch_rss_news(source):
+    news_list = []
+    try:
+        resp = requests.get(source['url'], headers=HEADERS, timeout=15)
+        soup = BeautifulSoup(resp.text, 'xml')
+        items = soup.find_all('item')[:20]
+
+        for item in items:
+            title_el = item.find('title')
+            link_el = item.find('link')
+            src_el = item.find('source')
+
+            if not title_el:
+                continue
+            title = XML_CLEAN_RE.sub('', title_el.text).strip()
+            if len(title) < 10 or len(title) > 120:
+                continue
+
+            source_name = 'GoogleNews'
+            if src_el:
+                source_name = XML_CLEAN_RE.sub('', src_el.text).strip()[:20]
+
+            url = link_el.text.strip() if link_el else '#'
+            if not url.startswith('http'):
+                link_candidates = item.find_all('link')
+                for lc in link_candidates:
+                    t = lc.text.strip()
+                    if t.startswith('http'):
+                        url = t
+                        break
+
+            news_list.append({
+                'title': title,
+                'source': source_name,
+                'url': url,
+            })
+            if len(news_list) >= 6:
+                break
+
+        print(f"  RSS #{source['name']}: 获取 {len(news_list)} 条")
+
+    except Exception as e:
+        print(f"  RSS #{source['name']} 失败: {str(e)[:50]}")
 
     return news_list
 
@@ -863,32 +924,101 @@ def fetch_all_news():
     return all_news
 
 
+FALLBACK_TITLE_POOL = {
+    'politics': [
+        '国务院常务会议部署稳经济一揽子政策接续措施',
+        '外交部回应国际热点：坚持对话协商解决分歧',
+        '全国人大常委会审议多项重要法律草案',
+        '王毅出席多边外长会议阐述中方立场',
+        '国务院发布关于推进全国统一大市场建设的意见',
+        '中央经济工作会议定调明年宏观政策方向',
+        '商务部：多边贸易体制改革取得阶段性进展',
+        '医保基金监管新规出台，守护百姓救命钱',
+        '国防部：坚决反对任何形式的军事挑衅',
+        '国家发改委推动营商环境进一步优化',
+        '中美高层战略对话在第三地举行',
+        '国务院印发深化收入分配制度改革方案',
+        '中欧班列开行量创新高，贸易通道持续拓宽',
+        '全国生态保护红线划定工作全面完成',
+    ],
+    'economy': [
+        'A股三大指数收涨，两市成交突破万亿大关',
+        '央行实施降准操作释放长期资金超五千亿元',
+        '前五月进出口贸易顺差创近三年新高',
+        '大宗商品价格波动加剧，监管部门加强市场引导',
+        '新能源板块领涨两市，光伏龙头业绩超预期',
+        '人民币汇率弹性增强，央行强调双向浮动是常态',
+        '财政部启动新一轮专项债券发行',
+        '社融数据超预期，实体经济融资环境持续改善',
+        '数字人民币试点已覆盖全国主要城市',
+        '快递业务量突破千亿件，消费复苏信号明显',
+        '科创50指数成分股调整，硬科技企业占比提升',
+        '个人养老金制度落地一年，参保人数稳步增长',
+        '智能汽车产业链景气度持续攀升',
+        '多地出台购房新政，因城施策稳定市场预期',
+    ],
+    'tech': [
+        '国产AI大模型性能评测：接近国际顶尖水平',
+        '中国量子计算原型机再度刷新世界纪录',
+        '工信部推进6G技术研发，多个试验卫星发射成功',
+        '生物医药领域取得突破，国产创新药首获FDA批准',
+        '智能驾驶路测里程累计突破亿公里',
+        '5G基站超过四百万座，行业应用全面开花',
+        '可复用商业运载火箭实现首次垂直回收',
+        '国产操作系统生态建设提速，装机量破千万',
+        '第三代半导体产业迎来投资高峰期',
+        '脑机接口技术临床试验取得阶段性成果',
+        '新能源汽车渗透率突破50%里程碑',
+        '全球最大液流储能电站在新疆并网发电',
+        '工业机器人装机量稳居全球第一',
+        '太赫兹通信技术研究取得关键进展',
+    ],
+    'military': [
+        '解放军东部战区组织多军种联合演训',
+        '新一代主战坦克完成高原适应性测试',
+        '空军开放活动展示多款新型战机',
+        '海军新型综合补给舰入列服役',
+        '国防科技大学发布新型无人机集群技术',
+        '军事科学院举办国防科技创新成果展',
+        '火箭军某旅组织夜间导弹突击演练',
+        '中俄联合军事演习在日本海举行',
+        '退役军人保障法配套细则出台',
+        '武警部队深入推进训练转型',
+    ],
+    'humanities': [
+        '教育部启动基础教育课程改革新方案',
+        '中国世界遗产总数稳居世界前列',
+        '五一假期旅游市场火爆，文旅融合成新趋势',
+        '高校双一流建设进入提质增效新阶段',
+        '全民健身公共服务体系进一步完善',
+        '全国博物馆年参观人次突破十四亿',
+        '基本养老保险全国统筹改革稳步推进',
+        '中国作家获国际文学大奖，彰显文化软实力',
+        '老旧小区改造加装电梯惠及百万居民',
+        '高校就业指导服务升级，多举措促进毕业生就业',
+        '数字文化新业态营收规模持续扩大',
+        '全国医保参保率稳定在百分之九十五以上',
+    ],
+}
+
+
 def get_fallback_news():
-    return {
-        'politics': [
-            {'title': '全国两会闭幕，高质量发展成最强音', 'source': '新华网', 'url': '#'},
-            {'title': '中欧领导人会晤达成多项共识', 'source': '人民网', 'url': '#'},
-            {'title': '联合国气候变化大会通过新决议', 'source': '央视新闻', 'url': '#'},
-        ],
-        'economy': [
-            {'title': '一季度GDP同比增长5.3%，经济运行开局良好', 'source': '经济日报', 'url': '#'},
-            {'title': '央行下调LPR利率，释放稳增长信号', 'source': '证券时报', 'url': '#'},
-            {'title': 'A股三大指数全线上涨，北向资金大幅净流入', 'source': '新浪财经', 'url': '#'},
-        ],
-        'tech': [
-            {'title': '国产大模型迭代提速，多模态能力显著提升', 'source': '科技日报', 'url': '#'},
-            {'title': '华为发布新一代芯片，突破先进制程瓶颈', 'source': '36氪', 'url': '#'},
-            {'title': '商业航天加速布局，多枚火箭成功发射', 'source': 'IT之家', 'url': '#'},
-        ],
-        'military': [
-            {'title': '新型驱逐舰正式入列，海军战力再上新台阶', 'source': '解放军报', 'url': '#'},
-            {'title': '国防部回应南海局势：坚决捍卫国家主权', 'source': '环球军事', 'url': '#'},
-        ],
-        'humanities': [
-            {'title': '文化遗产保护取得新进展，多处遗址入选世界名录', 'source': '光明日报', 'url': '#'},
-            {'title': '教育改革深入推进，多地推出创新举措', 'source': '澎湃新闻', 'url': '#'},
-        ]
-    }
+    today = datetime.now()
+    day_offset = today.day - 1
+
+    result = {}
+    for cat, pool in FALLBACK_TITLE_POOL.items():
+        start = (day_offset * 3) % len(pool)
+        selected = []
+        for i in range(min(5, len(pool))):
+            idx = (start + i) % len(pool)
+            selected.append({
+                'title': pool[idx],
+                'source': '示例数据',
+                'url': '#',
+            })
+        result[cat] = selected
+    return result
 
 
 def generate_fallback_overview(title, cat):
@@ -913,21 +1043,13 @@ def main():
         news_data = fetch_all_news()
         total = sum(len(v) for v in news_data.values())
         if total < 3:
-            print(f"\n⚠️ 只爬取到 {total} 条新闻，使用备用数据")
+            print(f"\n⚠️ 只爬取到 {total} 条新闻，启用动态备用数据")
             news_data = get_fallback_news()
             use_fallback = True
     except Exception as e:
-        print(f"\n⚠️ 爬取出错: {str(e)[:80]}，使用备用数据")
+        print(f"\n⚠️ 爬取出错: {str(e)[:80]}，启用动态备用数据")
         news_data = get_fallback_news()
         use_fallback = True
-
-    if use_fallback:
-        today = datetime.now().strftime("%m月%d日")
-        fallback_news = get_fallback_news()
-        for cat, items in fallback_news.items():
-            for item in items:
-                item['title'] = item['title'].replace('X月X日', today)
-        news_data = fallback_news
 
     if use_fallback:
         enriched = []
