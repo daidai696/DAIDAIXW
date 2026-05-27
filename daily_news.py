@@ -228,7 +228,7 @@ def summarize_article(text, max_sentences=3):
 def extract_detail_points(text, cat):
     """从文章正文中提取有实质内容的细节要点"""
     if not text:
-        return [{'label': '新闻概述', 'content': '点击查看原文了解详情。'}]
+        return [{'label': '核心内容', 'content': '详情请关注后续报道。'}]
 
     sentences = re.split(r'[。！？；\n]', text)
     sentences = [s.strip() for s in sentences if len(s.strip()) > 20]
@@ -314,6 +314,8 @@ def enrich_all_news(news_data):
 
     enriched = []
     for cat, item, summary in results:
+        if not summary:
+            summary = _build_title_overview(item['title'], cat)
         details = extract_detail_points(summary, cat)
         enriched.append({
             'cat': cat,
@@ -389,7 +391,7 @@ THEME_INSIGHT_CONCISE = {
     ],
     '民生关切与社会脉动': [
         '{angle}领域进展折射社会治理重心向提质增效转变，将催生新服务业态和消费增长点。',
-        '{angle}议题热度表明民生从\"有没有\"向\"好不好\"过渡，这一转向蕴含社会投资机遇。',
+        '{angle}议题热度表明民生从"有没有"向"好不好"过渡，这一转向蕴含社会投资机遇。',
     ],
 }
 
@@ -623,7 +625,6 @@ def update_html_template(enriched_news, summary_html, use_fallback=False):
                 'cat': cat_key,
                 'overview': escape_js_string(news['overview']),
                 'details': news['details'],
-                'insight': compose_news_insight(news),
             }
             news_id += 1
 
@@ -638,14 +639,12 @@ def update_html_template(enriched_news, summary_html, use_fallback=False):
         escaped_title = data['title']
         escaped_source = data['source']
         escaped_overview = data['overview']
-        escaped_insight = data['insight']
         escaped_url = data['url']
         js_parts.append(
             f"{idx}: {{title: \"{escaped_title}\", source: \"{escaped_source}\", "
             f"url: \"{escaped_url}\", cat: \"{data['cat']}\", "
             f"overview: \"{escaped_overview}\", "
-            f"details: {details_json}, "
-            f"insight: \"{escaped_insight}\"}}"
+            f"details: {details_json}}}"
         )
     js_news_data = '{\n        ' + ',\n        '.join(js_parts) + '\n    }' if js_parts else '{0: {title: "暂无新闻"}}'
 
@@ -677,110 +676,6 @@ def update_html_template(enriched_news, summary_html, use_fallback=False):
     with open('news-detail.html', 'w', encoding='utf-8') as f:
         f.write(detail_html)
     print("✅ news-detail.html 已生成")
-
-
-def compose_news_insight(news):
-    """为单条新闻撰写有指向性的启示——说明这意味着什么、影响谁、后续如何发展"""
-    title = news.get('title', '')
-    overview = news.get('overview', '')
-    cat = news.get('cat', '')
-
-    keyword_hints = _extract_key_hints(title + overview)
-
-    angle = keyword_hints.get('angle', '值得关注')
-    impact = keyword_hints.get('impact', '相关领域各方')
-    outlook = keyword_hints.get('outlook', '持续关注后续动态')
-
-    insight_templates = {
-        'tech': (
-            '“{title}”这一动态传递的核心信号是：{angle}。对于{impact}而言，这意味着技术路线和市场格局可能出现实质性变化。'
-            '从趋势上看，{outlook}，值得持续跟踪。'
-        ),
-        'economy': (
-            '“{title}”释放的关键信息在于{angle}。对{impact}来说，这条消息提示关注政策节奏与资金流向的变化。'
-            '前瞻来看，{outlook}，建议保持跟踪。'
-        ),
-        'politics': (
-            '“{title}”背后的深层逻辑是{angle}。对于{impact}来说，这意味着战略环境或制度框架正在发生调整。'
-            '展望后续，{outlook}，其连锁效应值得密切关注。'
-        ),
-        'military': (
-            '“{title}”反映出的核心变化在于{angle}。这对{impact}来说意味着安全能力或地缘态势进入新阶段。'
-            '后续值得关注的是，{outlook}。'
-        ),
-        'humanities': (
-            '“{title}”折射出的社会意义在于{angle}。对于{impact}而言，这意味着发展理念或生活方式正在演进。'
-            '未来可以期待，{outlook}。'
-        ),
-    }
-
-    default_tpl = (
-        '“{title}”值得关注的核心是{angle}。对于{impact}而言，这是一个值得重视的信号。'
-        '后续可以关注{outlook}。'
-    )
-
-    tpl = insight_templates.get(cat, default_tpl)
-    return tpl.format(title=title, angle=angle, impact=impact, outlook=outlook)
-
-
-def _extract_key_hints(text):
-
-    angle_hints = {
-        '政策密集出台': ['出台', '印发', '发布', '实施', '落地', '方案', '意见', '通知', '措施', '部署'],
-        '产业格局重塑': ['格局', '重塑', '整合', '重组', '并购', '洗牌', '淘汰', '崛起'],
-        '技术取得突破': ['突破', '攻克', '研发成功', '首次', '领先', '刷新', '纪录', '自主'],
-        '市场信心回暖': ['回暖', '反弹', '回升', '上涨', '流入', '看好', '增持', '突破'],
-        '监管边界厘清': ['监管', '规范', '整治', '查处', '合规', '标准', '门槛', '准入'],
-        '国际关系调整': ['关系', '合作', '对话', '协商', '谈判', '访问', '声明', '共识', '分歧'],
-        '增长动能切换': ['动能', '切换', '转型', '升级', '新经济', '新业态', '新模式', '消费'],
-        '安全态势变化': ['安全', '威胁', '风险', '冲突', '对抗', '防御', '部署', '警戒'],
-        '民生持续改善': ['改善', '提升', '优化', '保障', '服务', '惠民', '便利', '覆盖'],
-        '社会共识凝聚': ['共识', '凝聚', '呼声', '关注', '讨论', '热议', '反思', '觉醒'],
-    }
-
-    impact_hints = {
-        '投资者和资本市场': ['股市', '股价', '投资', '资本', '基金', '板块', '资金', '市值', 'IPO'],
-        '相关行业和企业': ['企业', '公司', '行业', '产业', '厂商', '供应链', '制造业'],
-        '政策制定和监管部门': ['政府', '部门', '监管', '政策', '制度', '法规', '标准'],
-        '科技从业者和研发机构': ['技术', '研发', '创新', '工程师', '科学家', '实验室', '专利'],
-        '普通消费者和居民': ['消费', '居民', '百姓', '民众', '用户', '生活', '服务', '价格', '物价'],
-        '外贸和跨境从业者': ['出口', '进口', '贸易', '关税', '跨境', '国际', '海外'],
-    }
-
-    outlook_hints = {
-        '政策细则和落地节奏将成为关键观察点': ['政策', '细则', '出台', '落地', '实施', '节奏'],
-        '行业洗牌和竞争格局可能加速演变': ['竞争', '格局', '洗牌', '行业', '市场', '淘汰'],
-        '技术商业化和生态建设进度值得跟踪': ['技术', '商业化', '应用', '落地', '生态', '平台'],
-        '市场情绪和资金流向可能出现结构性分化': ['市场', '资金', '情绪', '分化', '结构', '流向'],
-        '国际博弈态势和各方后续反应将影响走向': ['国际', '博弈', '反应', '后续', '多方', '回应'],
-        '配套措施和长效机制建设是下一步重点': ['配套', '机制', '体系', '建设', '完善', '长期'],
-    }
-
-    best_angle = '出现值得关注的变化'
-    best_angle_score = 0
-    for desc, kws in angle_hints.items():
-        score = sum(1 for kw in kws if kw in text)
-        if score > best_angle_score:
-            best_angle_score = score
-            best_angle = desc
-
-    best_impact = '相关各方'
-    best_impact_score = 0
-    for desc, kws in impact_hints.items():
-        score = sum(1 for kw in kws if kw in text)
-        if score > best_impact_score:
-            best_impact_score = score
-            best_impact = desc
-
-    best_outlook = '该事件的后续发展'
-    best_outlook_score = 0
-    for desc, kws in outlook_hints.items():
-        score = sum(1 for kw in kws if kw in text)
-        if score > best_outlook_score:
-            best_outlook_score = score
-            best_outlook = desc
-
-    return {'angle': best_angle, 'impact': best_impact, 'outlook': best_outlook}
 
 
 def fetch_all_news():
@@ -899,6 +794,19 @@ def get_fallback_news():
             })
         result[cat] = selected
     return result
+
+
+def _build_title_overview(title, cat):
+    """从标题生成简洁概述（时间+主体+事件格式）"""
+    today_str = datetime.now().strftime("%m月%d日")
+    templates = {
+        'politics': f'{today_str}，{title}。此举对政策走向具有重要信号意义。',
+        'economy': f'{today_str}，{title}。该消息引发市场各方关注，后续影响值得跟踪。',
+        'tech': f'{today_str}，{title}。这一进展标志着相关技术领域取得重要突破。',
+        'military': f'{today_str}，{title}。这是国防军事领域的重要动态。',
+        'humanities': f'{today_str}，{title}。这一事件折射人文社会领域的深层脉动。',
+    }
+    return templates.get(cat, f'{today_str}，{title}。该新闻值得关注。')
 
 
 def generate_fallback_overview(title, cat):
