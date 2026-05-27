@@ -3,9 +3,6 @@ name: Daily News Update
 on:
   schedule:
     - cron: '0 2 * * *'
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
@@ -21,7 +18,7 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: pip install requests beautifulsoup4
+        run: pip install requests beautifulsoup4 lxml
 
       - name: Run news generator
         run: python daily_news.py
@@ -31,6 +28,6 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add daily-news.html news-detail.html
-          git diff --cached --quiet || (git commit -m "Auto update news" && git push --force)
+          git diff --cached --quiet || (git commit -m "Auto update news" && git push)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
