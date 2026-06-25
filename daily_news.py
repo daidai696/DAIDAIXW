@@ -287,14 +287,19 @@ def ai_batch_summarize(articles):
         )
     articles_text = "\n\n".join(lines)
 
-    prompt = f"""你是一个专业新闻编辑。请为以下每篇新闻生成一句精炼的摘要（30-60字），准确概括新闻核心内容。
+    prompt = f"""你是专业新闻编辑兼分析师。请为以下每篇新闻生成两部分内容：
 
-对于没有正文的新闻，请根据标题和来源合理推断其报道内容，生成可信的摘要。
+1. **summary**：2-3句概括新闻事件本身（发生了什么，约50-80字）
+2. **insight**：1句深入分析或启示（这件事为什么重要、有什么影响或趋势，约30-50字）
 
-严格返回JSON数组格式，不要任何额外文字：
+summary 和 insight 必须是不同的内容，insight 不能重复 summary 的文字。
+
+对于没有正文的新闻，请根据标题和来源合理推断。
+
+严格返回JSON数组：
 [
-  {{"index": 0, "summary": "摘要内容。"}},
-  {{"index": 1, "summary": "摘要内容。"}}
+  {{"index": 0, "summary": "概括内容。", "insight": "深度分析。"}},
+  {{"index": 1, "summary": "概括内容。", "insight": "深度分析。"}}
 ]
 
 新闻列表：
@@ -302,11 +307,11 @@ def ai_batch_summarize(articles):
 
     result = call_deepseek(
         [
-            {"role": "system", "content": "你是专业新闻编辑。只返回JSON数组，不要解释。"},
+            {"role": "system", "content": "你是专业新闻编辑兼分析师。只返回JSON数组，summary和insight必须不同。"},
             {"role": "user", "content": prompt}
         ],
         temperature=0.3,
-        max_tokens=4000
+        max_tokens=6000
     )
 
     if not result:
@@ -315,8 +320,8 @@ def ai_batch_summarize(articles):
     try:
         json_match = re.search(r'\[[\s\S]*\]', result)
         if json_match:
-            summaries = json.loads(json_match.group())
-            return {int(s['index']): s['summary'] for s in summaries}
+            items = json.loads(json_match.group())
+            return {int(s['index']): {'summary': s['summary'], 'insight': s['insight']} for s in items}
     except (json.JSONDecodeError, KeyError, ValueError) as e:
         print(f"  解析AI摘要JSON失败: {str(e)[:80]}")
 
@@ -377,35 +382,38 @@ def ai_daily_summary(summaries_by_cat):
     return result
 
 
-def _build_ai_details(overview, cat):
-    """从AI摘要提取关键点，避免与概述完全重复"""
+def _build_ai_details(insight, overview, cat):
+    """生成与概述不同的深度分析/启示"""
+    detail_label = {
+        'tech':       '深度分析',
+        'economy':    '趋势研判',
+        'politics':   '战略解读',
+        'military':   '安全启示',
+        'humanities': '价值思考',
+    }
+
+    if insight:
+        return [{'label': detail_label.get(cat, '核心启示'), 'content': insight}]
+
+    # 无AI insight时，从overview中提取不同内容
     if not overview:
         return [{'label': '核心内容', 'content': '详情请关注后续报道。'}]
 
     sentences = re.split(r'[。！？]', overview)
-    sentences = [s.strip() for s in sentences if len(s.strip()) > 10]
+    sentences = [s.strip() for s in sentences if len(s.strip()) > 15]
 
-    labels = DETAIL_LABELS.get(cat, ['核心内容', '重要动态'])
-    details = []
-
-    # 只取一句作为细节展示，且截断以避免与 overview 完全重复
     if len(sentences) >= 2:
-        # 多句摘要：用第一句做细节标签
-        detail_text = sentences[0]
-        if len(detail_text) > 60:
-            detail_text = detail_text[:60] + '…'
-        details.append({'label': labels[0], 'content': detail_text + '。'})
+        detail_text = sentences[-1]  # 用最后一句，通常包含意义/影响
+        if len(detail_text) > 70:
+            detail_text = detail_text[:70] + '…'
+        return [{'label': detail_label.get(cat, '要点'), 'content': detail_text + '。'}]
     elif len(sentences) == 1:
-        # 单句摘要：截取前半部分避免重复
         detail_text = sentences[0]
-        if len(detail_text) > 40:
-            detail_text = detail_text[:40] + '…'
-        details.append({'label': labels[0], 'content': detail_text + '。'})
+        if len(detail_text) > 50:
+            detail_text = detail_text[:50] + '…'
+        return [{'label': detail_label.get(cat, '要点'), 'content': detail_text + '。'}]
 
-    if not details:
-        details.append({'label': labels[0], 'content': '详情请关注后续报道。'})
-
-    return details[:1]
+    return [{'label': '核心内容', 'content': '详情请关注后续报道。'}]
 
 
 def summarize_article(text, max_sentences=3):
@@ -534,16 +542,20 @@ def enrich_all_news(news_data):
     enriched = []
     for art in articles_for_ai:
         if ai_summaries and art['index'] in ai_summaries:
-            overview = ai_summaries[art['index']]
+            ai_data = ai_summaries[art['index']]
+            overview = ai_data['summary'] if isinstance(ai_data, dict) else ai_data
+            insight = ai_data.get('insight', '') if isinstance(ai_data, dict) else ''
         elif art['body']:
             overview = summarize_article(art['body'])
+            insight = ''
         else:
             overview = ''
+            insight = ''
 
         if not overview:
             overview = _build_title_overview(art['title'], art['cat'])
 
-        details = _build_ai_details(overview, art['cat'])
+        details = _build_ai_details(insight, overview, art['cat'])
 
         enriched.append({
             'cat': art['cat'],
@@ -845,7 +857,7 @@ def update_html_template(enriched_news, summary_html, use_fallback=False):
         for news in cat_news:
             overview_html = ''
             if news['overview']:
-                overview_html = f'<div class="news-card-overview">{news["overview"]}</div>'
+                overview_html = f'<div class="news-card-overview"><span class="overview-label">内容概括</span>{news["overview"]}</div>'
 
             detail_html_lines = []
             for d in news['details']:
