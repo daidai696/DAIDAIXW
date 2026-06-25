@@ -15,27 +15,41 @@ import re
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+# ============================================================
+# 新闻源配置：每个分类多个 Google News RSS 查询，覆盖不同角度
+# ============================================================
+
 NEWS_SOURCES = {
-    'politics': [
-        {'name': '新华网', 'url': 'https://www.xinhuanet.com/politics/', 'type': 'html'},
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E4%B8%AD%E5%9B%BD%E6%94%BF%E6%B2%BB&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+    'tech': [
+        # 科技 —— 侧重 AI 和前沿技术
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%22+%22%E5%A4%A7%E6%A8%A1%E5%9E%8B%22+%22AI%22+%22AGI%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22AI%E8%8A%AF%E7%89%87%22+%22GPU%22+%22%E6%99%BA%E7%AE%97%E4%B8%AD%E5%BF%83%22+%22%E6%9C%BA%E5%99%A8%E4%BA%BA%22+%22%E8%87%AA%E5%8A%A8%E9%A9%BE%E9%A9%B6%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E7%A7%91%E6%8A%80%E5%88%9B%E6%96%B0%22+%22%E5%8D%8A%E5%AF%BC%E4%BD%93%22+%22%E9%87%8F%E5%AD%90%E8%AE%A1%E7%AE%97%22+%22%E6%96%B0%E8%83%BD%E6%BA%90%22+%22%E5%A4%AA%E7%A9%BA%E6%8E%A2%E7%B4%A2%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
     ],
     'economy': [
-        {'name': '新浪财经', 'url': 'https://finance.sina.com.cn/', 'type': 'html'},
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E7%BB%8F%E6%B5%8E%E9%87%91%E8%9E%8D&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        # 经济 —— 聚焦全球和中国宏观经济发展（去股票化）
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E5%85%A8%E7%90%83%E7%BB%8F%E6%B5%8E%22+%22GDP%22+%22%E4%BE%9B%E5%BA%94%E9%93%BE%22+%22%E8%B4%B8%E6%98%93%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E4%B8%AD%E5%9B%BD%E7%BB%8F%E6%B5%8E%22+%22%E9%AB%98%E8%B4%A8%E9%87%8F%E5%8F%91%E5%B1%95%22+%22%E6%96%B0%E7%94%9F%E4%BA%A7%E5%8A%9B%22+%22%E4%BA%A7%E4%B8%9A%E5%8D%87%E7%BA%A7%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E9%80%9A%E8%83%80%22+%22%E5%A4%AE%E8%A1%8C%22+%22%E8%B4%A7%E5%B8%81%E6%94%BF%E7%AD%96%22+%22%E8%B4%A2%E6%94%BF%22+%22%E5%9B%BD%E9%99%85%E7%BB%8F%E6%B5%8E%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
     ],
-    'tech': [
-        {'name': '36氪', 'url': 'https://36kr.com/', 'type': 'html'},
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E7%A7%91%E6%8A%80AI&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
-    ],
-    'military': [
-        {'name': '环球军事', 'url': 'https://mil.huanqiu.com/', 'type': 'html'},
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E5%86%9B%E4%BA%8B%E5%9B%BD%E9%98%B2&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+    'politics': [
+        # 政治 —— 国际关系 + 中国政策（不只是内政）
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E4%B8%AD%E7%BE%8E%E5%85%B3%E7%B3%BB%22+%22%E4%B8%AD%E6%AC%A7%22+%22%E5%A4%96%E4%BA%A4%22+%22%E5%9B%BD%E9%99%85%E5%85%B3%E7%B3%BB%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E5%9B%BD%E9%99%85%E5%BD%A2%E5%8A%BF%22+%22%E5%9C%B0%E7%BC%98%E6%94%BF%E6%B2%BB%22+%22%E5%8D%97%E6%B5%B7%22+%22G7%22+%22%E8%81%94%E5%90%88%E5%9B%BD%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E5%9B%BD%E5%8A%A1%E9%99%A2%22+%22%E6%94%BF%E7%AD%96%22+%22%E6%94%B9%E9%9D%A9%22+%22%E6%B3%95%E8%A7%84%22+%22%E4%B8%AD%E5%9B%BD%E6%94%BF%E5%BA%9C%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
     ],
     'humanities': [
-        {'name': '澎湃新闻', 'url': 'https://www.thepaper.cn/', 'type': 'html'},
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E6%96%87%E5%8C%96%E6%95%99%E8%82%B2%E6%B0%91%E7%94%9F&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
-    ]
+        # 人文 —— 聚焦具体人物故事
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E4%BA%BA%E7%89%A9%22+%22%E8%AE%BF%E8%B0%88%22+%22%E4%BA%BA%E7%89%A9%E6%95%85%E4%BA%8B%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E8%89%BA%E6%9C%AF%E5%AE%B6%22+%22%E4%BD%9C%E5%AE%B6%22+%22%E5%AD%A6%E8%80%85%22+%22%E4%BC%81%E4%B8%9A%E5%AE%B6%22+%22%E5%88%9B%E4%B8%9A%E8%80%85%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E6%96%87%E5%8C%96%E5%90%8D%E4%BA%BA%22+%22%E7%A4%BE%E4%BC%9A%E8%BF%90%E5%8A%A8%22+%22%E5%85%AC%E7%9B%8A%22+%22%E4%BA%BA%E6%96%87%E6%8A%A5%E5%91%8A%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+    ],
+    'military': [
+        # 军事 —— 新型装备 + 国际冲突
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E5%86%9B%E4%BA%8B%E8%A3%85%E5%A4%87%22+%22%E6%96%B0%E5%9E%8B%E6%88%98%E6%9C%BA%22+%22%E5%86%9B%E8%88%B0%22+%22%E5%AF%BC%E5%BC%B9%22+%22%E6%AD%A6%E5%99%A8%E7%B3%BB%E7%BB%9F%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E5%86%9B%E4%BA%8B%E5%86%B2%E7%AA%81%22+%22%E6%88%98%E4%BA%89%22+%22%E5%AE%89%E5%85%A8%E5%A8%81%E8%83%81%22+%22%E5%8D%8E%E4%B8%BA%22+%22%E5%8C%97%E7%BA%A6%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E5%9B%BD%E9%98%B2%E7%A7%91%E6%8A%80%22+%22%E5%86%9B%E4%BA%8B%E6%BC%94%E4%B9%A0%22+%22%E9%98%B2%E5%8D%AB%22+%22%E5%9C%B0%E7%BC%98%E5%86%B2%E7%AA%81%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+    ],
 }
 
 HEADERS = {
@@ -50,34 +64,34 @@ CATEGORY_NAMES = {
 }
 
 DETAIL_LABELS = {
-    'tech':       ['核心进展', '核心数据', '技术突破', '市场影响'],
-    'economy':    ['核心数据', '市场反应', '政策动态', '行业影响'],
-    'politics':   ['政策要点', '重要成果', '国际反应', '趋势研判'],
-    'military':   ['战略动向', '装备进展', '地缘态势', '安全影响'],
-    'humanities': ['文化动态', '社会影响', '民生关切', '发展启示'],
+    'tech':       ['核心突破', '技术细节', '产业影响', '未来展望'],
+    'economy':    ['宏观趋势', '政策动向', '全球影响', '结构变化'],
+    'politics':   ['外交动态', '政策要点', '国际反应', '战略意义'],
+    'military':   ['装备特性', '战略威慑', '地区影响', '安全格局'],
+    'humanities': ['人物事迹', '社会影响', '文化价值', '历史意义'],
 }
 
 LABEL_KEYWORDS = {
-    '核心数据':   ['增长', '下降', '%', '亿', '万', '数据', '统计', '指标', '同比', '环比', '达到', '突破', '超过'],
-    '市场反应':   ['上涨', '下跌', '股市', '股价', '涨', '跌', '收盘', '开盘', '资金', '净流入', '流出', '涨幅', '跌幅'],
-    '核心计划':   ['计划', '规划', '目标', '将', '预计', '方案', '措施', '路线图', '布局', '战略', '部署'],
-    '重要成果':   ['达成', '签署', '通过', '发布', '揭牌', '启动', '完成', '突破', '实现', '取得', '荣获'],
-    '紧张态势':   ['警告', '争端', '冲突', '紧张', '制裁', '对抗', '威胁', '风险', '指责', '谴责'],
-    '重要动作':   ['部署', '动员', '演习', '派遣', '调动', '宣布', '召开', '举行', '开展', '推动'],
-    '核心进展':   ['研发', '发布', '上线', '推出', '迭代', '升级', '突破', '创新', '试验', '验证'],
-    '核心内容':   ['指出', '强调', '提出', '明确', '认为', '分析', '解读', '阐述', '介绍'],
-    '政策要点':   ['政策', '法规', '条例', '通知', '意见', '方案', '措施', '出台', '印发', '实施'],
-    '国际反应':   ['回应', '表示', '声明', '表态', '关注', '欢迎', '反对', '支持', '呼吁'],
-    '市场影响':   ['市场', '行业', '产业', '板块', '领域', '影响', '带动', '推动', '格局'],
-    '技术突破':   ['技术', '算法', '模型', '芯片', '算力', '系统', '平台', '框架', '架构'],
-    '战略动向':   ['战略', '军事', '国防', '安全', '演习', '部队', '装备', '武器', '部署'],
-    '装备进展':   ['装备', '武器', '舰艇', '战机', '导弹', '雷达', '系统', '交付', '入列'],
-    '趋势研判':   ['趋势', '走向', '前景', '预测', '预计', '分析', '判断', '展望', '将'],
-    '发展启示':   ['启示', '意义', '价值', '影响', '改变', '推动', '促进', '带动'],
-    '民生关切':   ['民生', '教育', '医疗', '住房', '养老', '就业', '收入', '保障'],
-    '文化动态':   ['文化', '艺术', '遗产', '保护', '创新', '传承', '展览', '出版'],
-    '社会影响':   ['社会', '公众', '舆论', '讨论', '关注', '热议', '聚焦', '引发'],
-    '行业影响':   ['行业', '产业', '企业', '公司', '业务', '营收', '利润', '竞争'],
+    '核心突破':   ['突破', '发布', '首次', '创新', '领先', '超越', '刷新', '记录', '里程碑', '首创'],
+    '技术细节':   ['技术', '算法', '模型', '参数', '架构', '芯片', 'GPU', '训练', '推理', '开源'],
+    '产业影响':   ['产业', '行业', '落地', '应用', '商业化', '投资', '融资', '生态', '合作'],
+    '未来展望':   ['未来', '趋势', '预测', '预计', '规划', '愿景', '前景', '方向'],
+    '宏观趋势':   ['GDP', '增长', '趋势', '指数', '下降', '恢复', '复苏', '转型', '结构', '制造业'],
+    '政策动向':   ['政策', '央行', '财政部', '法规', '调控', '利率', '监管', '改革', '开放'],
+    '全球影响':   ['全球', '出口', '进口', '贸易', '供应链', '跨国', '美元', '欧元', 'IMF', '国际'],
+    '结构变化':   ['产业', '升级', '转型', '结构', '劳动力', '数字化', '绿色', '碳', '能源'],
+    '外交动态':   ['外交', '访问', '会见', '会谈', '磋商', '对话', '声明', '联合', '签署'],
+    '政策要点':   ['政策', '法规', '条例', '改革', '部署', '出台', '印发', '实施', '推进'],
+    '国际反应':   ['回应', '反应', '表态', '声明', '关注', '谴责', '支持', '反对', '呼吁'],
+    '战略意义':   ['战略', '格局', '秩序', '同盟', '博弈', '竞争', '合作', '对抗', '平衡'],
+    '装备特性':   ['装备', '武器', '战机', '军舰', '导弹', '雷达', '系统', '无人机', '装甲'],
+    '战略威慑':   ['战略', '威慑', '防御', '部署', '演习', '基地', '联盟', '条约', '核'],
+    '地区影响':   ['地区', '冲突', '紧张', '领土', '海域', '边界', '对峙', '谈判', '停火'],
+    '安全格局':   ['安全', '威胁', '风险', '国防', '军备', '平衡', '监控', '侦察', '情报'],
+    '人物事迹':   ['人物', '故事', '经历', '成就', '贡献', '获奖', '荣誉', '传奇', '记录'],
+    '社会影响':   ['影响', '改变', '推动', '引领', '启发', '激励', '争议', '热议', '关注'],
+    '文化价值':   ['文化', '艺术', '价值', '遗产', '传承', '创新', '思想', '精神', '理念'],
+    '历史意义':   ['历史', '时代', '里程碑', '标志', '开创', '先锋', '先驱', '意义'],
 }
 
 SITE_ARTICLE_SELECTORS = {
@@ -151,27 +165,36 @@ def _fetch_rss_news(source):
             if not title_el:
                 continue
             title = XML_CLEAN_RE.sub('', title_el.text).strip()
+            # 清理常见冗余：移除标题末尾的 " - SourceName"
+            if ' - ' in title[-40:]:
+                parts = title.rsplit(' - ', 1)
+                if len(parts[1]) <= 20:
+                    title = parts[0].strip()
             if len(title) < 10 or len(title) > 120:
                 continue
 
             source_name = 'GoogleNews'
             if src_el:
-                source_name = XML_CLEAN_RE.sub('', src_el.text).strip()[:20]
+                src_text = XML_CLEAN_RE.sub('', src_el.text).strip()
+                if src_text and len(src_text) <= 30:
+                    source_name = src_text
 
-            url = link_el.text.strip() if link_el else '#'
-            if not url.startswith('http'):
-                link_candidates = item.find_all('link')
-                for lc in link_candidates:
-                    t = lc.text.strip()
-                    if t.startswith('http'):
-                        url = t
-                        break
+            # 提取原始文章URL：优先从 source 标签的 url 属性获取
+            original_url = '#'
+            if src_el and src_el.get('url'):
+                original_url = src_el['url']
+            if original_url == '#' and link_el:
+                url_text = link_el.text.strip()
+                if url_text.startswith('http'):
+                    original_url = url_text
 
             news_list.append({
                 'title': title,
                 'source': source_name,
-                'url': '#',
+                'url': original_url,
             })
+            if len(news_list) >= 6:
+                break
             if len(news_list) >= 6:
                 break
 
@@ -206,6 +229,167 @@ def extract_article_text(html_text, source_name, url):
         return ''
     except Exception:
         return ''
+
+
+
+# ============================================================
+# DeepSeek AI 集成
+# ============================================================
+
+DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
+DEEPSEEK_BASE_URL = "https://api.deepseek.com"
+DEEPSEEK_MODEL = "deepseek-chat"
+AI_ENABLED = bool(DEEPSEEK_API_KEY)
+
+
+def call_deepseek(messages, temperature=0.3, max_tokens=2000):
+    try:
+        resp = requests.post(
+            f"{DEEPSEEK_BASE_URL}/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": DEEPSEEK_MODEL,
+                "messages": messages,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+            },
+            timeout=90
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            return data["choices"][0]["message"]["content"].strip()
+        else:
+            print(f"  DeepSeek API 错误 {resp.status_code}: {resp.text[:150]}")
+            return None
+    except Exception as e:
+        print(f"  DeepSeek API 调用失败: {str(e)[:100]}")
+        return None
+
+
+def ai_batch_summarize(articles):
+    if not articles:
+        return {}
+
+    lines = []
+    for art in articles:
+        body = art.get('body', '')[:600]
+        body_display = body if body else "（无正文，请根据标题和来源推断新闻内容）"
+        lines.append(
+            f"[{art['index']}] 标题：{art['title']}\n"
+            f"    来源：{art['source']}\n"
+            f"    正文：{body_display}"
+        )
+    articles_text = "\n\n".join(lines)
+
+    prompt = f"""你是一个专业新闻编辑。请为以下每篇新闻生成一句精炼的摘要（30-60字），准确概括新闻核心内容。
+
+对于没有正文的新闻，请根据标题和来源合理推断其报道内容，生成可信的摘要。
+
+严格返回JSON数组格式，不要任何额外文字：
+[
+  {{"index": 0, "summary": "摘要内容。"}},
+  {{"index": 1, "summary": "摘要内容。"}}
+]
+
+新闻列表：
+{articles_text}"""
+
+    result = call_deepseek(
+        [
+            {"role": "system", "content": "你是专业新闻编辑。只返回JSON数组，不要解释。"},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.3,
+        max_tokens=4000
+    )
+
+    if not result:
+        return {}
+
+    try:
+        json_match = re.search(r'\[[\s\S]*\]', result)
+        if json_match:
+            summaries = json.loads(json_match.group())
+            return {int(s['index']): s['summary'] for s in summaries}
+    except (json.JSONDecodeError, KeyError, ValueError) as e:
+        print(f"  解析AI摘要JSON失败: {str(e)[:80]}")
+
+    return {}
+
+
+def ai_daily_summary(summaries_by_cat):
+    if not summaries_by_cat:
+        return None
+
+    context_parts = []
+    order = ['economy', 'tech', 'politics', 'military', 'humanities']
+    for cat in order:
+        items = summaries_by_cat.get(cat, [])
+        if not items:
+            continue
+        cat_name = CATEGORY_NAMES.get(cat, cat)
+        context_parts.append(f"【{cat_name}】")
+        for i, n in enumerate(items, 1):
+            context_parts.append(f"  {i}. {n['title']}")
+            context_parts.append(f"     摘要：{n.get('overview', '')}")
+        context_parts.append("")
+
+    context = "\n".join(context_parts)
+
+    prompt = f"""你是资深新闻分析师。基于以下今日新闻摘要，撰写一份每日深度总结。
+
+要求：
+- 按经济、科技、政治与国际、军事安全、人文人物5个维度分析，每维度写1小段（1-2句精炼洞察）
+- 关注趋势关联和深层逻辑，不要罗列标题
+- 经济层面聚焦全球宏观和中国经济发展
+- 科技层面侧重AI与前沿技术突破
+- 政治层面关注国际关系和中国政策走向
+- 军事层面侧重新型装备与国际冲突态势
+- 人文层面关注具体人物故事及其时代意义
+- 最后写1句综合判断
+- 严格使用以下HTML格式输出（每行一个p标签）：
+
+<p class="summary-line"><strong>经济层面</strong>：洞察内容...</p>
+<p class="summary-line"><strong>科技层面</strong>：洞察内容...</p>
+<p class="summary-line"><strong>政治与国际层面</strong>：洞察内容...</p>
+<p class="summary-line"><strong>军事安全层面</strong>：洞察内容...</p>
+<p class="summary-line"><strong>人文人物层面</strong>：洞察内容...</p>
+<p class="summary-line">综合来看，（1-2句总结）。</p>
+
+今日新闻：
+{context}"""
+
+    result = call_deepseek(
+        [
+            {"role": "system", "content": "你是资深新闻分析师。严格输出HTML格式，不要额外解释。"},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.5,
+        max_tokens=2000
+    )
+
+    return result
+
+
+def _build_ai_details(overview, cat):
+    if not overview:
+        return [{'label': '核心内容', 'content': '详情请关注后续报道。'}]
+
+    sentences = re.split(r'[。！？]', overview)
+    sentences = [s.strip() for s in sentences if len(s.strip()) > 8]
+
+    labels = DETAIL_LABELS.get(cat, ['核心内容', '重要动态'])
+    details = []
+    for i, s in enumerate(sentences[:2]):
+        details.append({'label': labels[i] if i < len(labels) else '关键信息', 'content': s + '。'})
+
+    if not details and sentences:
+        details.append({'label': labels[0], 'content': sentences[0] + '。'})
+
+    return details[:2]
 
 
 def summarize_article(text, max_sentences=3):
@@ -273,56 +457,84 @@ def extract_detail_points(text, cat):
     return details[:2]
 
 
-def fetch_article_summary(news_item):
-    """抓取单篇新闻正文并提取摘要"""
+def _fetch_article_body(news_item):
     try:
+        if news_item['url'] == '#':
+            return ''
         resp = requests.get(news_item['url'], headers=HEADERS, timeout=10)
         resp.encoding = resp.apparent_encoding or 'utf-8'
         text = extract_article_text(resp.text, news_item['source'], news_item['url'])
-        if text:
-            return summarize_article(text)
+        return text
     except Exception as e:
-        print(f"  抓取正文失败 [{news_item['title'][:20]}]: {str(e)[:40]}")
-    return ''
+        return ''
 
 
 def enrich_all_news(news_data):
-    """批量抓取所有新闻的正文，提取摘要和细节"""
+    """批量抓取正文，用AI生成摘要和细节"""
     all_tasks = []
     for cat, items in news_data.items():
         for item in items:
             all_tasks.append((cat, item))
 
     print(f"\n📥 正在抓取 {len(all_tasks)} 篇新闻正文...")
-    results = []
 
+    article_results = []
     with ThreadPoolExecutor(max_workers=5) as executor:
         futures = {
-            executor.submit(fetch_article_summary, item): (cat, item)
+            executor.submit(_fetch_article_body, item): (cat, item)
             for cat, item in all_tasks
         }
         for future in as_completed(futures):
             cat, item = futures[future]
             try:
-                summary = future.result()
-                results.append((cat, item, summary))
-                status = '✅' if summary else '⚠️'
+                body_text = future.result()
+                article_results.append((cat, item, body_text))
+                status = '✅' if body_text else '(no body)'
                 print(f"  {status} [{CATEGORY_NAMES.get(cat, cat)}] {item['title'][:30]}")
             except Exception as e:
-                results.append((cat, item, ''))
-                print(f"  ❌ [{CATEGORY_NAMES.get(cat, cat)}] {item['title'][:30]}: {str(e)[:30]}")
+                article_results.append((cat, item, ''))
+                print(f"  X [{CATEGORY_NAMES.get(cat, cat)}] {item['title'][:30]}: {str(e)[:30]}")
 
-    enriched = []
-    for cat, item, summary in results:
-        if not summary:
-            summary = _build_title_overview(item['title'], cat)
-        details = extract_detail_points(summary, cat)
-        enriched.append({
+    articles_for_ai = []
+    for idx, (cat, item, body_text) in enumerate(article_results):
+        articles_for_ai.append({
+            'index': idx,
             'cat': cat,
             'title': item['title'],
             'source': item['source'],
             'url': item['url'],
-            'overview': summary,
+            'body': body_text,
+        })
+
+    ai_summaries = {}
+    if AI_ENABLED:
+        print(f"\n:robot: 正在调用 DeepSeek AI 生成 {len(articles_for_ai)} 篇文章摘要...")
+        ai_summaries = ai_batch_summarize(articles_for_ai)
+        if ai_summaries:
+            print(f"  OK AI摘要生成完成 ({len(ai_summaries)}篇)")
+        else:
+            print(f"  WARN AI摘要生成失败，回退到传统方法")
+
+    enriched = []
+    for art in articles_for_ai:
+        if ai_summaries and art['index'] in ai_summaries:
+            overview = ai_summaries[art['index']]
+        elif art['body']:
+            overview = summarize_article(art['body'])
+        else:
+            overview = ''
+
+        if not overview:
+            overview = _build_title_overview(art['title'], art['cat'])
+
+        details = _build_ai_details(overview, art['cat'])
+
+        enriched.append({
+            'cat': art['cat'],
+            'title': art['title'],
+            'source': art['source'],
+            'url': art['url'],
+            'overview': overview,
             'details': details,
         })
 
@@ -336,68 +548,89 @@ THEME_CLUSTERS = {
 
     '政策信号与治理方向': {
         'keywords': ['政策', '国务院', '发改委', '财政部', '央行', '会议', '改革', '制度', '法规', '条例',
-                   '意见', '方案', '规划', '部署', '出台', '印发', '审议', '全国人大', '政协', '两会',
-                   '高质量发展', '现代化', '体系', '机制', '中国式现代化'],
+                   '意见', '方案', '规划', '部署', '出台', '印发', '审议', '全国人大', '政协',
+                   '高质量发展', '现代化', '体系', '机制', '中国式现代化', '对外开放'],
         'desc_prefix': '政策层面',
     },
 
-    '经济走势与市场信号': {
-        'keywords': ['GDP', '增长', '经济', '股市', 'A股', '利率', 'LPR', '贷款', '投资', '消费',
-                   '出口', '贸易', 'PMI', '数据', '同比', '环比', '上市', 'IPO', '资金', '流入',
-                   '流出', '涨', '跌', '收盘', '涨幅', '跌幅', '板块', '指数', '基金', '债券',
-                   '财政', '税收', '地方债', '专项债'],
+    '全球经济与中国发展': {
+        'keywords': ['GDP', '增长', '经济', '贸易', '制造业', '产业链', '供应链',
+                   '全球化', '跨国', '出口', '进口', '通胀', '货币政策', '央行',
+                   '财政', '税收', '数字化', '绿色', '转型', '升级',
+                   '东盟', '一带一路', '金砖', 'IMF', '世界银行'],
         'desc_prefix': '经济层面',
     },
 
-    '科技突破与产业变革': {
-        'keywords': ['AI', '人工智能', '大模型', '算法', '芯片', '算力', '量子', '卫星', '航天',
-                   '自动驾驶', '机器人', '5G', '6G', '数字化', '平台经济', '技术', '创新', '突破',
-                   '研发', '发布', '迭代', '升级', '模型', '系统', '架构', '新能源', '光伏',
-                   '电池', '新能源汽车', '半导体', '集成电路'],
-        'desc_prefix': '科技与产业层面',
+    '科技突破与AI变革': {
+        'keywords': ['AI', '人工智能', '大模型', '算法', '芯片', 'GPU', '算力', '量子', '卫星', '航天',
+                   '自动驾驶', '机器人', '5G', '6G', '数字化', '技术', '创新', '突破',
+                   '研发', '发布', '迭代', '升级', '模型', '系统', '架构',
+                   '半导体', '集成电路', '人形机器人', '脑机'],
+        'desc_prefix': '科技层面',
     },
 
     '国际格局与地缘动态': {
         'keywords': ['美国', '中美', '欧盟', '北约', '俄罗斯', '日本', '韩国', '朝鲜', '台湾', '南海',
                    '制裁', '关税', '贸易战', '谈判', '协定', '峰会', '访问', '声明', '军事', '国防',
-                   '演习', '装备', '部队', '安全', '威胁', '风险', '冲突', '争端', '主权', '领土'],
+                   '演习', '装备', '部队', '安全', '威胁', '风险', '冲突', '争端', '主权', '领土',
+                   '外交', '联合国', 'G7', 'G20', '地缘'],
         'desc_prefix': '国际层面',
     },
 
-    '民生关切与社会脉动': {
-        'keywords': ['民生', '教育', '医疗', '住房', '养老', '就业', '收入', '保障', '社保', '医保',
-                   '文化', '遗产', '保护', '体育', '旅游', '交通', '环保', '碳', '绿色', '生态',
-                   '社会', '公众', '群众', '人民', '居民', '消费者', '生活', '健康'],
-        'desc_prefix': '社会与民生层面',
+    '社会人文与人物故事': {
+        'keywords': ['人物', '故事', '遗产', '文化', '艺术', '教育', '体育',
+                   '公益', '慈善', '创新', '创业', '科学家', '艺术家', '作家',
+                   '学者', '企业家', '领袖', '获奖', '荣誉', '传承', '保护',
+                   '精神', '价值', '影响', '贡献', '时代'],
+        'desc_prefix': '社会与人文层面',
     },
 }
 
 THEME_INSIGHT_CONCISE = {
     '政策信号与治理方向': [
         '决策层在{angle}方向持续发力，配套措施有望密集落地，对{impact_group}而言意味着制度红利与规则重塑。',
-        '{angle}相关部署是战略框架的有机组成，后续细则出台节奏将直接影响市场预期与产业布局。',
+        '{angle}相关部署是战略框架的有机组成，后续细则出台节奏将直接影响行业预期与产业布局。',
     ],
-    '经济走势与市场信号': [
-        '{angle}成为当前经济运行关键变量，需关注政策传导时滞，在短期波动中把握结构性机会。',
-        '{angle}领域边际变化值得重视，资金流向与板块轮动暗示市场正对中长期增长逻辑重新定价。',
+    '全球经济与中国发展': [
+        '{angle}成为当前全球经济格局演变的关键变量，各国经济政策的协同与分化值得密切关注。',
+        '{angle}领域边际变化折射全球产业链深度重构，结构性调整机遇与挑战并存。',
     ],
-    '科技突破与产业变革': [
-        '{angle}方向加速演进，技术从实验室到产品化周期缩短，率先完成生态建设的企业将获先发优势。',
-        '{angle}技术突破是产业链协同升级的缩影，上下游企业均面临能力重构的压力与机遇。',
+    '科技突破与AI变革': [
+        '{angle}方向加速演进，AI技术正在从单点突破转向系统性变革，对产业和社会的影响远超预期。',
+        '{angle}技术突破是产业智能化升级的缩影，技术先发优势正在转化为国家竞争力。',
     ],
     '国际格局与地缘动态': [
-        '{angle}动向反映国际力量对比持续变化，地缘政治风险正成为外贸企业和跨境投资者的核心决策变量。',
-        '围绕{angle}的多方博弈短期内将加剧市场波动，中长期可能重塑全球供应链格局。',
+        '{angle}动向反映国际力量对比持续调整，地缘政治风险已成为全球经济的核心不确定因素。',
+        '围绕{angle}的多方博弈短期内将加剧紧张态势，中长期可能重塑全球战略平衡格局。',
     ],
-    '民生关切与社会脉动': [
-        '{angle}领域进展折射社会治理重心向提质增效转变，将催生新服务业态和消费增长点。',
-        '{angle}议题热度表明民生从"有没有"向"好不好"过渡，这一转向蕴含社会投资机遇。',
+    '社会人文与人物故事': [
+        '{angle}领域的标杆人物与事件折射社会价值取向的深层变化，个体故事中蕴含着时代精神。',
+        '{angle}议题凸显人文关怀与社会进步的共生关系，在快速发展的时代中坚守人性温度更显珍贵。',
     ],
 }
 
 
 def compose_daily_summary(enriched_news):
-    """精简总结：按主题归类，每层1-2句核心分析，去除标题罗列和过渡语"""
+    """每日深度总结：优先AI生成，失败则回退传统方法"""
+    if not enriched_news:
+        return '<p>今日暂无足够信息生成深度总结，请浏览各栏目新闻卡片了解详情。</p>'
+
+    if AI_ENABLED:
+        by_cat = {}
+        for n in enriched_news:
+            by_cat.setdefault(n['cat'], []).append(n)
+        print("\n🤖 正在调用 AI 生成每日深度总结...")
+        ai_result = ai_daily_summary(by_cat)
+        if ai_result:
+            print("  ✅ AI深度总结生成完成")
+            return ai_result
+        print("  ⚠️ AI深度总结失败，使用传统方法")
+
+    return _compose_daily_summary_legacy(enriched_news)
+
+
+def _compose_daily_summary_legacy(enriched_news):
+    """传统总结：按主题归类，每层1-2句核心分析（fallback）"""
     if not enriched_news:
         return '<p>今日暂无足够信息生成深度总结，请浏览各栏目新闻卡片了解详情。</p>'
 
@@ -447,9 +680,10 @@ def compose_daily_summary(enriched_news):
         lines.append(f'<strong>{prefix}</strong>：{insight}')
 
     lines.append(
-        '综合来看，今日各领域动态共同指向一个正在深刻调整的世界——政策在精细化、'
-        '市场在结构性分化、技术在加速渗透、国际秩序在持续重组。'
-        '在这多重转型叠加的关键时期，理解不同领域间的联动关系，才能更准确地把握方向。'
+        '综合来看，今日各领域动态共同指向一个深度重构的世界——AI技术正在改写产业规则、'
+        '全球经济在分化中寻找新均衡、国际秩序在多极博弈中持续重组、'
+        '而个体的坚守与创造则为时代注入了不可替代的人文温度。'
+        '在这多重转型叠加的关键时期，跨领域的系统性思维，或许比单一视角更能接近真相。'
     )
 
     return ''.join(f'<p class="summary-line">{l}</p>' for l in lines)
@@ -701,78 +935,82 @@ def fetch_all_news():
 
 FALLBACK_TITLE_POOL = {
     'politics': [
-        '国务院常务会议部署稳经济一揽子政策接续措施',
-        '外交部回应国际热点：坚持对话协商解决分歧',
-        '全国人大常委会审议多项重要法律草案',
-        '王毅出席多边外长会议阐述中方立场',
-        '国务院发布关于推进全国统一大市场建设的意见',
-        '中央经济工作会议定调明年宏观政策方向',
-        '商务部：多边贸易体制改革取得阶段性进展',
-        '医保基金监管新规出台，守护百姓救命钱',
-        '国防部：坚决反对任何形式的军事挑衅',
-        '国家发改委推动营商环境进一步优化',
-        '中美高层战略对话在第三地举行',
-        '国务院印发深化收入分配制度改革方案',
-        '中欧班列开行量创新高，贸易通道持续拓宽',
-        '全国生态保护红线划定工作全面完成',
+        '中美高层对话释放管控分歧积极信号',
+        '外交部就国际热点问题阐述中方立场',
+        '王毅出席联合国大会一般性辩论并发表讲话',
+        '国务院常务会议部署深化改革开放新举措',
+        '中欧领导人会晤推动双边关系稳定发展',
+        '金砖国家扩员后首次峰会聚焦全球治理改革',
+        '中方在安理会就巴以问题提出四点主张',
+        '国务院发布优化外商投资环境行动方案',
+        '中国与东盟自贸区3.0版谈判取得实质进展',
+        '国防白皮书阐释新时代中国防御性国防政策',
+        '上合组织峰会签署多项安全合作文件',
+        '全国人大常委会通过新修订的对外关系法',
+        '中国与太平洋岛国合作论坛达成多项共识',
+        '国际原子能机构总干事访华讨论核安全合作',
     ],
     'economy': [
-        'A股三大指数收涨，两市成交突破万亿大关',
-        '央行实施降准操作释放长期资金超五千亿元',
-        '前五月进出口贸易顺差创近三年新高',
-        '大宗商品价格波动加剧，监管部门加强市场引导',
-        '新能源板块领涨两市，光伏龙头业绩超预期',
-        '人民币汇率弹性增强，央行强调双向浮动是常态',
-        '财政部启动新一轮专项债券发行',
-        '社融数据超预期，实体经济融资环境持续改善',
-        '数字人民币试点已覆盖全国主要城市',
-        '快递业务量突破千亿件，消费复苏信号明显',
-        '科创50指数成分股调整，硬科技企业占比提升',
-        '个人养老金制度落地一年，参保人数稳步增长',
-        '智能汽车产业链景气度持续攀升',
-        '多地出台购房新政，因城施策稳定市场预期',
+        '世行上调中国经济增长预期至百分之五点二',
+        'IMF报告称亚洲仍是全球经济增长主要引擎',
+        '我国制造业PMI连续三个月位于扩张区间',
+        '国务院出台促进民营经济发展壮大新措施',
+        '前五个月我国与共建一带一路国家贸易增长',
+        '全球供应链重构背景下中国产业链韧性凸显',
+        '央行行长阐述货币政策调控框架转型思路',
+        '中国与沙特签署绿色能源合作协议',
+        '东盟连续四年保持中国最大贸易伙伴地位',
+        '服务业增加值占GDP比重突破百分之五十五',
+        '全国统一电力市场体系建设方案出台',
+        '全球经济增速分化加剧，南南合作重要性提升',
+        '中国经济转型：从高速增长转向高质量发展',
+        '政治局会议分析研究当前经济形势和经济工作',
     ],
     'tech': [
-        '国产AI大模型性能评测：接近国际顶尖水平',
-        '中国量子计算原型机再度刷新世界纪录',
-        '工信部推进6G技术研发，多个试验卫星发射成功',
-        '生物医药领域取得突破，国产创新药首获FDA批准',
-        '智能驾驶路测里程累计突破亿公里',
-        '5G基站超过四百万座，行业应用全面开花',
-        '可复用商业运载火箭实现首次垂直回收',
-        '国产操作系统生态建设提速，装机量破千万',
-        '第三代半导体产业迎来投资高峰期',
-        '脑机接口技术临床试验取得阶段性成果',
-        '新能源汽车渗透率突破50%里程碑',
-        '全球最大液流储能电站在新疆并网发电',
-        '工业机器人装机量稳居全球第一',
-        '太赫兹通信技术研究取得关键进展',
+        '国产AI大模型在多项国际评测中登顶',
+        'OpenAI发布新一代多模态模型能力引关注',
+        '中国科学家实现量子纠错重大技术突破',
+        '全球AI芯片竞争加剧，算力基础设施投资激增',
+        '华为发布盘古大模型最新版本，性能大幅提升',
+        '特斯拉人形机器人量产计划引发产业热议',
+        'AI制药公司利用深度学习加速新药研发',
+        '中美科技竞争进入AI基础设施新阶段',
+        '中国脑机接口技术首次实现人脑信号实时解码',
+        '全球首款AI原生操作系统发布颠覆交互方式',
+        '可控核聚变实验取得里程碑式进展',
+        'AI安全治理框架成为联合国科技议程重点',
+        '全球半导体投资热潮背后的地缘政治博弈',
+        '大模型技术向垂直行业渗透速度超预期',
     ],
     'military': [
-        '解放军东部战区组织多军种联合演训',
-        '新一代主战坦克完成高原适应性测试',
-        '空军开放活动展示多款新型战机',
-        '海军新型综合补给舰入列服役',
-        '国防科技大学发布新型无人机集群技术',
-        '军事科学院举办国防科技创新成果展',
-        '火箭军某旅组织夜间导弹突击演练',
-        '中俄联合军事演习在日本海举行',
-        '退役军人保障法配套细则出台',
-        '武警部队深入推进训练转型',
+        '美军第六代战机NGAD项目技术细节曝光',
+        '中国新型隐身舰载机完成首次航母起降测试',
+        '俄乌冲突中无人机战术运用引发军事变革讨论',
+        '高超音速武器竞赛加速全球战略平衡重塑',
+        '北约启动新一轮军事现代化计划聚焦网络战',
+        '中国电磁弹射技术实现关键突破',
+        '波斯湾局势持续紧张多国增兵加强军事存在',
+        '韩国自主研发第五代战机KF-21进入量产',
+        '南海海域军事活动频繁引发区域安全关注',
+        '激光武器技术从实验室走向实战部署',
+        '太空军事化趋势加剧多国组建太空部队',
+        '新一代洲际导弹试射成功展示战略威慑能力',
+        'AI军事应用伦理问题引发国际激烈辩论',
+        '台湾海峡军事态势进入新调整期',
     ],
     'humanities': [
-        '教育部启动基础教育课程改革新方案',
-        '中国世界遗产总数稳居世界前列',
-        '五一假期旅游市场火爆，文旅融合成新趋势',
-        '高校双一流建设进入提质增效新阶段',
-        '全民健身公共服务体系进一步完善',
-        '全国博物馆年参观人次突破十四亿',
-        '基本养老保险全国统筹改革稳步推进',
-        '中国作家获国际文学大奖，彰显文化软实力',
-        '老旧小区改造加装电梯惠及百万居民',
-        '高校就业指导服务升级，多举措促进毕业生就业',
-        '数字文化新业态营收规模持续扩大',
-        '全国医保参保率稳定在百分之九十五以上',
+        '诺贝尔文学奖揭晓引发关于文学价值的全球讨论',
+        '知名企业家捐赠百亿成立教育基金会',
+        '敦煌研究院名誉院长樊锦诗：一生守护莫高窟',
+        '残奥冠军转型社会企业家推动无障碍事业',
+        '中国非遗传承人获联合国教科文组织表彰',
+        '华尔街传奇投资人查理芒格生前最后一次专访',
+        '青年科学家放弃海外高薪回国创业故事',
+        '太行山深处的支教老师：二十年坚守点亮希望',
+        '中国女导演首次摘得戛纳电影节金棕榈奖',
+        '考古学家在三星堆遗址发现前所未有的文物',
+        '全球气候活动家在联合国气候大会上的演讲',
+        '中国医学专家团队攻克罕见病治疗难题',
     ],
 }
 
@@ -797,27 +1035,27 @@ def get_fallback_news():
 
 
 def _build_title_overview(title, cat):
-    """从标题生成简洁概述（时间+主体+事件格式）"""
+    """从标题生成简洁概述（AI不可用时的fallback）"""
     today_str = datetime.now().strftime("%m月%d日")
     templates = {
-        'politics': f'{today_str}，{title}。此举对政策走向具有重要信号意义。',
-        'economy': f'{today_str}，{title}。该消息引发市场各方关注，后续影响值得跟踪。',
-        'tech': f'{today_str}，{title}。这一进展标志着相关技术领域取得重要突破。',
-        'military': f'{today_str}，{title}。这是国防军事领域的重要动态。',
-        'humanities': f'{today_str}，{title}。这一事件折射人文社会领域的深层脉动。',
+        'tech':       f'{today_str}，{title}。这一进展是AI与前沿科技领域的重要动态。',
+        'economy':    f'{today_str}，{title}。该消息折射全球宏观经济格局的深层变化。',
+        'politics':   f'{today_str}，{title}。此举对国际关系和外交格局具有重要信号意义。',
+        'military':   f'{today_str}，{title}。该动态反映出全球军事安全格局的新演变。',
+        'humanities': f'{today_str}，{title}。这一人物事件折射出文化与社会层面的深层脉动。',
     }
     return templates.get(cat, f'{today_str}，{title}。该新闻值得关注。')
 
 
 def generate_fallback_overview(title, cat):
-    """为备用新闻生成简洁概述（时间+地点+主体+事件格式）"""
+    """为备用新闻生成概述（fallback）"""
     today_str = datetime.now().strftime("%m月%d日")
     templates = {
-        'politics': f'{today_str}，相关部门就"{title}"作出最新部署。此举旨在推动政策落地见效，后续实施细则值得关注。',
-        'economy': f'{today_str}，"{title}"引发市场关注。当前经济环境下，该动态对行业预期和政策方向具有参考价值。',
-        'tech': f'{today_str}，"{title}"取得重要进展，标志着相关领域技术加速向产业化迈进。',
-        'military': f'{today_str}，"{title}"是国防安全领域的重要动态，体现能力建设的持续推进。',
-        'humanities': f'{today_str}，"{title}"展现社会民生和文化领域新进展，折射公众对美好生活的共同追求。',
+        'tech':       f'{today_str}，"{title}"取得重要进展。在AI技术快速迭代的背景下，这一突破将对相关产业格局产生深远影响。',
+        'economy':    f'{today_str}，"{title}"引发广泛关注。在全球经济格局深度调整之际，该动态对宏观经济走向具有参考价值。',
+        'politics':   f'{today_str}，"{title}"引发各方关注。当前国际形势下，这一事件对大国关系和地区格局具有深远影响。',
+        'military':   f'{today_str}，"{title}"是国际军事安全领域的重要动态，反映了当前全球安全格局的持续演变。',
+        'humanities': f'{today_str}，"{title}"。这一人物故事折射出当代社会的价值追求与文化自觉，具有广泛的启发意义。',
     }
     return templates.get(cat, f'{today_str}，该新闻值得关注与深入思考。')
 
