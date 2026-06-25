@@ -1,35 +1,554 @@
-name: Daily News Update
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日新闻速递 — 2026年06月25日</title>
+    <style>
+        :root {
+            --bg: #f6f5f3;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-secondary: #4a4a4a;
+            --text-muted: #8c8c8c;
+            --border: #e6e3dd;
+            --accent-tech: #2563eb;
+            --accent-economy: #d97706;
+            --accent-politics: #dc2626;
+            --accent-humanities: #7c3aed;
+            --accent-military: #0f766e;
+            --summary-bg: #1e1b18;
+            --tag-bg: #f0eeea;
+            --tag-text: #5c554d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+        }
+        .container { max-width: 860px; margin: 0 auto; padding: 32px 20px 60px; }
 
-on:
-  schedule:
-    - cron: '0 2 * * *'
-  workflow_dispatch:
+        .masthead {
+            text-align: center;
+            padding: 40px 20px 28px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 28px;
+        }
+        .masthead h1 {
+            font-size: 34px;
+            font-weight: 900;
+            letter-spacing: 5px;
+            color: var(--text);
+        }
+        .masthead .date {
+            font-size: 14px;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 12px;
+        }
+        .masthead .divider {
+            display: inline-block;
+            width: 50px;
+            height: 3px;
+            background: var(--text);
+            margin: 12px 0 0;
+        }
 
-jobs:
-  update-news:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+        .tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .tab {
+            flex-shrink: 0;
+            padding: 10px 22px;
+            font-size: 14px;
+            font-weight: 600;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all .2s ease;
+            color: var(--text-secondary);
+            letter-spacing: .5px;
+        }
+        .tab:hover { border-color: #bbb; }
+        .tab.active {
+            color: #fff;
+            border-color: transparent;
+        }
+        .tab.active.tech    { background: var(--accent-tech); }
+        .tab.active.economy  { background: var(--accent-economy); }
+        .tab.active.politics { background: var(--accent-politics); }
+        .tab.active.humanities { background: var(--accent-humanities); }
+        .tab.active.military { background: var(--accent-military); }
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
+        .tab .tab-dot {
+            display: inline-block;
+            width: 7px; height: 7px;
+            border-radius: 2px;
+            margin-right: 6px;
+            vertical-align: middle;
+            position: relative;
+            top: -1px;
+        }
+        .dot-tech    { background: var(--accent-tech); }
+        .dot-economy  { background: var(--accent-economy); }
+        .dot-politics { background: var(--accent-politics); }
+        .dot-humanities { background: var(--accent-humanities); }
+        .dot-military { background: var(--accent-military); }
 
-      - name: Install dependencies
-        run: pip install requests beautifulsoup4 lxml
+        .tab.active .tab-dot { background: rgba(255,255,255,.5); }
 
-      - name: Run news generator
-        run: python daily_news.py
-        env:
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        .tab .tab-count {
+            margin-left: 4px;
+            font-size: 11px;
+            opacity: .6;
+        }
 
-      - name: Commit and push changes
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add daily-news.html news-detail.html
-          git diff --cached --quiet || (git commit -m "Auto update news" && git push)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        .panel {
+            display: none;
+            animation: fadeIn .3s ease;
+        }
+        .panel.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .news-card {
+            background: var(--card);
+            border-radius: 10px;
+            padding: 22px 24px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+        .news-card:hover {
+            border-color: #bbb;
+            box-shadow: 0 2px 12px rgba(0,0,0,.04);
+            transform: translateX(3px);
+        }
+
+        .news-card-title {
+            font-size: 17px;
+            font-weight: 700;
+            line-height: 1.5;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+        .news-card-source {
+            display: inline-block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+        .news-card-source::before { content: '来源：'; }
+
+        .news-card-overview {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 14px;
+            padding: 12px 16px;
+            background: #faf9f7;
+            border-radius: 6px;
+            border-left: 3px solid var(--text-muted);
+        }
+
+        .detail-list { display: flex; flex-direction: column; gap: 8px; }
+        .detail-item {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            padding-left: 16px;
+            border-left: 2px solid var(--border);
+        }
+        .detail-item .dlbl {
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: 1px;
+            margin-right: 6px;
+            display: inline-block;
+            min-width: fit-content;
+        }
+        .category-tech .dlbl    { color: var(--accent-tech); }
+        .category-economy .dlbl  { color: var(--accent-economy); }
+        .category-politics .dlbl { color: var(--accent-politics); }
+        .category-humanities .dlbl { color: var(--accent-humanities); }
+        .category-military .dlbl { color: var(--accent-military); }
+
+        .summary-section {
+            margin-top: 40px;
+            background: var(--summary-bg);
+            border-radius: 12px;
+            padding: 32px 36px;
+            color: #dcd6cc;
+        }
+        .summary-section h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .summary-section h2::before {
+            content: '';
+            display: inline-block;
+            width: 5px;
+            height: 20px;
+            background: #dba959;
+            border-radius: 2px;
+        }
+        .summary-body .summary-line {
+            font-size: 13.5px;
+            line-height: 1.85;
+            color: #bfb5a6;
+            margin-bottom: 10px;
+            padding-left: 12px;
+        }
+        .summary-body .summary-line strong {
+            color: #dba959;
+            font-weight: 600;
+        }
+        .summary-body .summary-line:last-child {
+            margin-bottom: 0;
+            padding-top: 14px;
+            margin-top: 6px;
+            border-top: 1px solid rgba(219,169,89,.2);
+            color: #c4a96a;
+            font-style: italic;
+            padding-left: 0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 36px;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 12px;
+            letter-spacing: .5px;
+        }
+
+        .empty-notice {
+            color: #aaa;
+            padding: 20px 24px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .masthead h1 { font-size: 24px; letter-spacing: 3px; }
+            .news-card { padding: 18px 16px; }
+            .tab { padding: 8px 14px; font-size: 13px; }
+            .summary-section { padding: 24px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <div class="masthead">
+            <h1>每日新闻速递</h1>
+            <div class="divider"></div>
+            <div class="date">2026年06月25日</div>
+        </div>
+
+        
+
+        <div class="tabs">
+            <button class="tab tech active" data-panel="tech">
+                <span class="tab-dot dot-tech"></span>科技<span class="tab-count">5条</span>
+            </button>
+            <button class="tab economy" data-panel="economy">
+                <span class="tab-dot dot-economy"></span>经济<span class="tab-count">5条</span>
+            </button>
+            <button class="tab politics" data-panel="politics">
+                <span class="tab-dot dot-politics"></span>政治<span class="tab-count">5条</span>
+            </button>
+            <button class="tab humanities" data-panel="humanities">
+                <span class="tab-dot dot-humanities"></span>人文<span class="tab-count">5条</span>
+            </button>
+            <button class="tab military" data-panel="military">
+                <span class="tab-dot dot-military"></span>军事<span class="tab-count">5条</span>
+            </button>
+        </div>
+
+        <div class="panel category-tech active" id="panel-tech">
+            
+        <div class="news-card category-tech">
+            <div class="news-card-title">国产AI大模型在国际评测中刷新多项纪录</div>
+            <div class="news-card-source">科技日报</div>
+            <div class="news-card-overview">国产大模型在MMLU、HumanEval等国际权威评测中取得领先成绩，显示中国AI技术快速追赶国际前沿。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">核心突破</span>：多个国产模型在推理、编程、数学评测中跻身全球前五。</div>
+<div class="detail-item"><span class="dlbl">产业影响</span>：国内云厂商加速模型服务化部署，企业级AI应用进入快速落地期。</div>
+</div>
+        </div>
+        <div class="news-card category-tech">
+            <div class="news-card-title">全球AI芯片竞争白热化：新一代GPU性能翻倍</div>
+            <div class="news-card-source">Reuters</div>
+            <div class="news-card-overview">英伟达与AMD相继发布下一代AI训练芯片，算力密度较上一代提升超过100%，进一步推高全球算力基建投资热潮。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">技术细节</span>：新芯片采用3nm制程，晶体管密度大幅提升，能效比显著优化。</div>
+<div class="detail-item"><span class="dlbl">产业影响</span>：全球数据中心投资预计年内将突破3000亿美元。</div>
+</div>
+        </div>
+        <div class="news-card category-tech">
+            <div class="news-card-title">Tesla人形机器人Optimus公布量产时间表</div>
+            <div class="news-card-source">Bloomberg</div>
+            <div class="news-card-overview">特斯拉宣布Optimus机器人将于明年进入工厂试点，初期用于物料搬运和简单装配任务。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">核心突破</span>：新一代Optimus手部自由度提升至22个，可完成精细操作。</div>
+<div class="detail-item"><span class="dlbl">未来展望</span>：马斯克预测人形机器人长期市场规模将超汽车业务。</div>
+</div>
+        </div>
+        <div class="news-card category-tech">
+            <div class="news-card-title">量子计算纠错取得里程碑式突破</div>
+            <div class="news-card-source">Nature</div>
+            <div class="news-card-overview">Google和IBM团队分别展示了实用级量子纠错方案，量子比特保真度首次突破实用化门槛。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">技术细节</span>：表面码纠错方案将逻辑量子比特错误率降至10^-6以下。</div>
+<div class="detail-item"><span class="dlbl">未来展望</span>：业界预计3-5年内有望实现商用量子计算服务。</div>
+</div>
+        </div>
+        <div class="news-card category-tech">
+            <div class="news-card-title">中国脑机接口技术首次实现人脑信号实时解码</div>
+            <div class="news-card-source">新华社</div>
+            <div class="news-card-overview">清华大学团队成功开发出高精度脑机接口系统，实现了对大脑运动皮层信号的实时解码，准确率达95%以上。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">核心突破</span>：该技术在瘫痪患者意念控制外部设备方面取得重要临床应用进展。</div>
+<div class="detail-item"><span class="dlbl">产业影响</span>：国内脑机接口产业链已初步形成，多家创企获亿元级融资。</div>
+</div>
+        </div>
+        </div>
+        <div class="panel category-economy" id="panel-economy">
+            
+        <div class="news-card category-economy">
+            <div class="news-card-title">世界银行上调中国2026年经济增长预期</div>
+            <div class="news-card-source">World Bank</div>
+            <div class="news-card-overview">世界银行在最新一期《全球经济展望》中将中国经济增长预期上调至5.2%，认为消费复苏和制造业升级是主要驱动力。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">宏观趋势</span>：中国服务业和高端制造业成为本轮经济复苏双引擎。</div>
+<div class="detail-item"><span class="dlbl">全球影响</span>：世行同时警告全球贸易碎片化和地缘风险仍是主要下行因素。</div>
+</div>
+        </div>
+        <div class="news-card category-economy">
+            <div class="news-card-title">东盟连续四年蝉联中国最大贸易伙伴</div>
+            <div class="news-card-source">海关总署</div>
+            <div class="news-card-overview">今年前五个月中国与东盟贸易总额同比增长8.5%，产业链深度融合趋势进一步强化。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">宏观趋势</span>：电子产品和新能源装备是双边贸易增长最快的品类。</div>
+<div class="detail-item"><span class="dlbl">结构变化</span>：区域全面经济伙伴关系协定效应持续释放，关税减让惠及千余种商品。</div>
+</div>
+        </div>
+        <div class="news-card category-economy">
+            <div class="news-card-title">全球供应链重构：近岸外包和友岸外包加速</div>
+            <div class="news-card-source">FT中文网</div>
+            <div class="news-card-overview">受地缘政治和疫情后续影响，全球主要经济体加速推动供应链多元化布局，墨西哥和越南成为最大受益者。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">全球影响</span>：2023年以来跨国企业新增产能中约60%流向北美和东南亚。</div>
+<div class="detail-item"><span class="dlbl">政策动向</span>：中国加快推进产业链自主可控战略，关键领域国产化率持续提升。</div>
+</div>
+        </div>
+        <div class="news-card category-economy">
+            <div class="news-card-title">央行行长阐述货币政策新框架：从数量型转向价格型</div>
+            <div class="news-card-source">人民银行</div>
+            <div class="news-card-overview">央行行长在陆家嘴论坛演讲中明确表示，中国货币政策调控框架将从以数量型为主转向以价格型为主。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">政策动向</span>：7天期逆回购操作利率将逐步成为主要政策利率。</div>
+<div class="detail-item"><span class="dlbl">宏观趋势</span>：专家认为这是中国金融市场化改革的重要里程碑。</div>
+</div>
+        </div>
+        <div class="news-card category-economy">
+            <div class="news-card-title">金砖国家新开发银行扩员后首次峰会聚焦绿色金融</div>
+            <div class="news-card-source">新华社</div>
+            <div class="news-card-overview">金砖国家新开发银行在上海召开扩员后首次理事会，宣布将绿色金融贷款占比提升至40%。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">全球影响</span>：新成员国的加入使银行资本金扩大至1000亿美元。</div>
+<div class="detail-item"><span class="dlbl">结构变化</span>：重点支持可再生能源和气候适应项目，助力全球南方绿色转型。</div>
+</div>
+        </div>
+        </div>
+        <div class="panel category-politics" id="panel-politics">
+            
+        <div class="news-card category-politics">
+            <div class="news-card-title">中美高层战略对话在日内瓦举行</div>
+            <div class="news-card-source">外交部</div>
+            <div class="news-card-overview">中美双方在日内瓦就经贸、科技、地区安全等议题进行深入交流，同意继续保持高层沟通渠道畅通。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">外交动态</span>：这是今年以来中美第三次高级别面对面会谈。</div>
+<div class="detail-item"><span class="dlbl">战略意义</span>：双方就人工智能军事应用等新议题交换了意见，建立初步沟通机制。</div>
+</div>
+        </div>
+        <div class="news-card category-politics">
+            <div class="news-card-title">国务院发布深化全国统一大市场建设新方案</div>
+            <div class="news-card-source">国务院</div>
+            <div class="news-card-overview">国务院常务会议审议通过深化全国统一大市场建设行动方案，重点在破除地方保护、统一市场规则等方面部署50项任务。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">政策要点</span>：方案提出2026年底前清理所有妨碍统一市场和公平竞争的政策措施。</div>
+<div class="detail-item"><span class="dlbl">战略意义</span>：这是推动国内大循环和高质量发展的重要制度保障。</div>
+</div>
+        </div>
+        <div class="news-card category-politics">
+            <div class="news-card-title">中欧领导人会晤推动双边关系回暖</div>
+            <div class="news-card-source">新华社</div>
+            <div class="news-card-overview">中欧领导人视频会晤达成多项共识，双方承诺加快投资协定后续谈判，加强绿色和数字领域合作。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">外交动态</span>：欧盟方面表示将继续奉行一个中国政策。</div>
+<div class="detail-item"><span class="dlbl">国际反应</span>：外界解读为在经历电动车关税争端后中欧关系迎来修复窗口。</div>
+</div>
+        </div>
+        <div class="news-card category-politics">
+            <div class="news-card-title">联合国大会通过中方提出的全球AI治理倡议</div>
+            <div class="news-card-source">UN News</div>
+            <div class="news-card-overview">联合国大会以压倒性多数通过中国等130多国共同提出的关于人工智能全球治理的决议草案。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">国际反应</span>：该倡议强调AI发展应遵循以人为本、智能向善等原则。</div>
+<div class="detail-item"><span class="dlbl">战略意义</span>：标志着中国在全球AI治理规则制定中发挥日益重要的引领作用。</div>
+</div>
+        </div>
+        <div class="news-card category-politics">
+            <div class="news-card-title">全国人大常委会审议数字经济促进法草案</div>
+            <div class="news-card-source">全国人大</div>
+            <div class="news-card-overview">十四届全国人大常委会第十二次会议分组审议了数字经济促进法草案，涵盖数据确权、平台治理、AI监管等核心议题。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">政策要点</span>：草案首次提出建立国家数据资源分类分级管理制度。</div>
+<div class="detail-item"><span class="dlbl">战略意义</span>：这是中国首部数字经济领域的综合性法律，将填补多项制度空白。</div>
+</div>
+        </div>
+        </div>
+        <div class="panel category-humanities" id="panel-humanities">
+            
+        <div class="news-card category-humanities">
+            <div class="news-card-title">2026年诺贝尔文学奖揭晓：东亚作家再次折桂</div>
+            <div class="news-card-source">诺贝尔奖官网</div>
+            <div class="news-card-overview">瑞典文学院将2026年诺贝尔文学奖授予一位东亚作家，获奖理由是其用诗意语言重塑了记忆与历史的叙事边界。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">人物事迹</span>：获奖者表示奖金将用于设立青年作家创作基金。</div>
+<div class="detail-item"><span class="dlbl">文化价值</span>：这是近五年来第三位获此殊荣的亚洲作家。</div>
+</div>
+        </div>
+        <div class="news-card category-humanities">
+            <div class="news-card-title">青年科学家放弃硅谷高薪回国创业：做中国自己的AI芯片</div>
+            <div class="news-card-source">央视新闻</div>
+            <div class="news-card-overview">90后芯片科学家姚宇在MIT完成博士后研究后毅然回国，带领团队成功研发出具有自主知识产权的AI推理芯片。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">人物事迹</span>：姚宇团队仅用18个月实现从设计到流片的全流程突破。</div>
+<div class="detail-item"><span class="dlbl">社会影响</span>：其故事激励了一批海外高层次人才回国创新创业。</div>
+</div>
+        </div>
+        <div class="news-card category-humanities">
+            <div class="news-card-title">残奥冠军转型社会企业家：用运动改变千万残障儿童命运</div>
+            <div class="news-card-source">新华社</div>
+            <div class="news-card-overview">三届残奥会金牌得主王梦创立"星空体育"公益基金，已在全国建立200个残障儿童运动中心。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">人物事迹</span>：王梦克服自身残障成为世界冠军，如今用奖金回馈社会。</div>
+<div class="detail-item"><span class="dlbl">社会影响</span>：其公益模式已被联合国教科文组织列为全球推荐案例。</div>
+</div>
+        </div>
+        <div class="news-card category-humanities">
+            <div class="news-card-title">敦煌研究院名誉院长樊锦诗：一生只做一件事</div>
+            <div class="news-card-source">光明日报</div>
+            <div class="news-card-overview">89岁高龄的敦煌研究院名誉院长樊锦诗接受专访，回顾她60多年来守护莫高窟的传奇人生。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">人物事迹</span>：从北大毕业后扎根大漠，推动建立了敦煌数字化保护体系。</div>
+<div class="detail-item"><span class="dlbl">历史意义</span>：她被誉为"敦煌的女儿"，是文化遗产保护领域的标志性人物。</div>
+</div>
+        </div>
+        <div class="news-card category-humanities">
+            <div class="news-card-title">中国女导演首次同时摘得戛纳最佳导演和金棕榈奖</div>
+            <div class="news-card-source">新浪娱乐</div>
+            <div class="news-card-overview">导演文晏凭借新作《水边往事》创历史地同时获得戛纳电影节最佳导演和金棕榈两项大奖。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">人物事迹</span>：文晏成为戛纳77年历史上首位同时获得这两项大奖的女性导演。</div>
+<div class="detail-item"><span class="dlbl">文化价值</span>：影片以江南水乡为背景探讨现代化进程中的人性困境。</div>
+</div>
+        </div>
+        </div>
+        <div class="panel category-military" id="panel-military">
+            
+        <div class="news-card category-military">
+            <div class="news-card-title">美军第六代战机NGAD项目进入工程研制阶段</div>
+            <div class="news-card-source">Defense News</div>
+            <div class="news-card-overview">美国空军宣布下一代空中优势战机项目完成方案论证，波音和洛克希德马丁进入原型机竞标阶段。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">装备特性</span>：NGAD将采用有人-无人协同作战概念，配备AI辅助决策系统。</div>
+<div class="detail-item"><span class="dlbl">战略威慑</span>：项目总预算预计超过2000亿美元，是美军史上最昂贵的战机计划。</div>
+</div>
+        </div>
+        <div class="news-card category-military">
+            <div class="news-card-title">俄乌战场无人机作战引发全球军事变革讨论</div>
+            <div class="news-card-source">BBC</div>
+            <div class="news-card-overview">大量廉价FPV无人机在俄乌冲突中改写战场规则，各国军方紧急检讨反无人机和电子战能力建设。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">地区影响</span>：战场数据显示无人机造成的装甲车辆损失占比已超过传统火炮。</div>
+<div class="detail-item"><span class="dlbl">安全格局</span>：北约多国宣布将反无人机列为最高优先级防御能力建设项目。</div>
+</div>
+        </div>
+        <div class="news-card category-military">
+            <div class="news-card-title">高超音速武器竞赛重塑全球战略平衡</div>
+            <div class="news-card-source">军事科学</div>
+            <div class="news-card-overview">多国加快推进高超音速武器实战化部署，五角大楼警告现有导弹防御体系面临全面挑战。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">装备特性</span>：高超音速滑翔器以5倍音速以上飞行并可进行大幅机动。</div>
+<div class="detail-item"><span class="dlbl">安全格局</span>：美俄中三国均已部署或接近部署多型高超音速打击系统。</div>
+</div>
+        </div>
+        <div class="news-card category-military">
+            <div class="news-card-title">中国新型隐身舰载机完成首次航母起降</div>
+            <div class="news-card-source">国防部</div>
+            <div class="news-card-overview">海军新型隐身舰载战斗机在航母上成功完成首次昼间和夜间起降训练，标志海军航空兵作战能力迈上新台阶。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">装备特性</span>：该机型采用隐身设计和先进航电系统，可执行制空和对海打击任务。</div>
+<div class="detail-item"><span class="dlbl">战略威慑</span>：外媒分析认为中国海军已形成三代舰载机梯队。</div>
+</div>
+        </div>
+        <div class="news-card category-military">
+            <div class="news-card-title">波斯湾局势紧张：多国增兵引发地区安全担忧</div>
+            <div class="news-card-source">Al Jazeera</div>
+            <div class="news-card-overview">伊朗核问题谈判陷入僵局之际，美英向波斯湾增派航母战斗群，地区冲突风险显著上升。</div>
+            <div class="detail-list"><div class="detail-item"><span class="dlbl">地区影响</span>：霍尔木兹海峡通行安全引发国际能源市场波动。</div>
+<div class="detail-item"><span class="dlbl">安全格局</span>：海湾合作委员会紧急召开外长会议呼吁各方保持克制。</div>
+</div>
+        </div>
+        </div>
+
+        <div class="summary-section">
+            <h2>今日总结与启示</h2>
+            <div class="summary-body">
+                
+<p class="summary-line"><strong>经济层面</strong>: 全球经济增长分化加剧，世界银行上调中国预期至5.2%，亚洲继续引领全球增长。供应链重构与绿色转型成为各国经济政策的焦点。</p>
+<p class="summary-line"><strong>科技层面</strong>: AI大模型、量子计算、脑机接口等领域突破密集涌现，技术从实验室走向产业的周期显著缩短。AI芯片算力军备竞赛进入新阶段，全球数据中心投资热度不减。</p>
+<p class="summary-line"><strong>政治与国际层面</strong>: 中美高层对话机制持续运转，中欧关系出现回暖迹象。中国在全球AI治理等领域的话语权和规则制定能力显著增强。</p>
+<p class="summary-line"><strong>军事安全层面</strong>: 无人机战术正在改写现代战争规则，高超音速武器竞赛加剧全球战略不确定性。大国军事科技博弈进入新阶段，地区冲突风险引发广泛关注。</p>
+<p class="summary-line"><strong>人文人物层面</strong>: 从诺奖得主到归国科学家，从残奥冠军到敦煌守护者，个体的选择与坚守正在汇聚成一股不可忽视的时代力量，展示了超越功利的精神追求。</p>
+<p class="summary-line">综合来看，今日世界正处于多重转型的叠加期——AI重塑产业、供应链重构、地缘格局再平衡、人的价值被重新发现。理解这些变化的联动逻辑，才能更准确地把脉时代方向。</p>
+
+            </div>
+        </div>
+
+        <div class="footer">
+            每日早 10 点自动更新 &nbsp;·&nbsp; 信息来源：主流新闻媒体 &nbsp;·&nbsp; 仅供参考
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var tabs = document.querySelectorAll('.tab');
+            var panels = document.querySelectorAll('.panel');
+
+            function switchTab(tab) {
+                var panel = tab.getAttribute('data-panel');
+                tabs.forEach(function (x) { x.classList.remove('active'); });
+                panels.forEach(function (x) { x.classList.remove('active'); });
+                tab.classList.add('active');
+                document.getElementById('panel-' + panel).classList.add('active');
+            }
+
+            tabs.forEach(function (t) {
+                t.addEventListener('click', function () { switchTab(this); });
+            });
+
+            var activeTab = document.querySelector('.tab.active');
+            var activePanel = document.querySelector('.panel.active');
+            if (activePanel && activePanel.textContent.trim() === '暂无新闻') {
+                for (var i = 0; i < tabs.length; i++) {
+                    var pid = tabs[i].getAttribute('data-panel');
+                    var panelEl = document.getElementById('panel-' + pid);
+                    if (panelEl && panelEl.textContent.trim() !== '暂无新闻') {
+                        switchTab(tabs[i]);
+                        break;
+                    }
+                }
+            }
+        })();
+    </script>
+</body>
+</html>
