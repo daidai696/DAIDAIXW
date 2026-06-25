@@ -165,6 +165,9 @@ def _fetch_rss_news(source):
             if not title_el:
                 continue
             title = XML_CLEAN_RE.sub('', title_el.text).strip()
+            # 清理特殊字符：移除 [-\] [...] (数字) 等前缀噪声
+            title = re.sub(r'^\[[^\]]*\]\s*[:：]?\s*', '', title)
+            title = re.sub(r'^\([^)]*\)\s*[:：]?\s*', '', title)
             # 清理常见冗余：移除标题末尾的 " - SourceName"
             if ' - ' in title[-40:]:
                 parts = title.rsplit(' - ', 1)
@@ -375,21 +378,34 @@ def ai_daily_summary(summaries_by_cat):
 
 
 def _build_ai_details(overview, cat):
+    """从AI摘要提取关键点，避免与概述完全重复"""
     if not overview:
         return [{'label': '核心内容', 'content': '详情请关注后续报道。'}]
 
     sentences = re.split(r'[。！？]', overview)
-    sentences = [s.strip() for s in sentences if len(s.strip()) > 8]
+    sentences = [s.strip() for s in sentences if len(s.strip()) > 10]
 
     labels = DETAIL_LABELS.get(cat, ['核心内容', '重要动态'])
     details = []
-    for i, s in enumerate(sentences[:2]):
-        details.append({'label': labels[i] if i < len(labels) else '关键信息', 'content': s + '。'})
 
-    if not details and sentences:
-        details.append({'label': labels[0], 'content': sentences[0] + '。'})
+    # 只取一句作为细节展示，且截断以避免与 overview 完全重复
+    if len(sentences) >= 2:
+        # 多句摘要：用第一句做细节标签
+        detail_text = sentences[0]
+        if len(detail_text) > 60:
+            detail_text = detail_text[:60] + '…'
+        details.append({'label': labels[0], 'content': detail_text + '。'})
+    elif len(sentences) == 1:
+        # 单句摘要：截取前半部分避免重复
+        detail_text = sentences[0]
+        if len(detail_text) > 40:
+            detail_text = detail_text[:40] + '…'
+        details.append({'label': labels[0], 'content': detail_text + '。'})
 
-    return details[:2]
+    if not details:
+        details.append({'label': labels[0], 'content': '详情请关注后续报道。'})
+
+    return details[:1]
 
 
 def summarize_article(text, max_sentences=3):
@@ -835,7 +851,7 @@ def update_html_template(enriched_news, summary_html, use_fallback=False):
             for d in news['details']:
                 detail_html_lines.append(
                     '<div class="detail-item">'
-                    f'<span class="dlbl">{d["label"]}</span>'
+                    f'<span class="dlbl">{d["label"]}</span>：'
                     f'{d["content"]}'
                     '</div>'
                 )
