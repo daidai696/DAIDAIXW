@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日新闻速递 — 2026年06月26日</title>
+    <style>
+        :root {
+            --bg: #f6f5f3;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-secondary: #4a4a4a;
+            --text-muted: #8c8c8c;
+            --border: #e6e3dd;
+            --accent-tech: #2563eb;
+            --accent-economy: #d97706;
+            --accent-politics: #dc2626;
+            --accent-humanities: #7c3aed;
+            --accent-military: #0f766e;
+            --summary-bg: #1e1b18;
+            --tag-bg: #f0eeea;
+            --tag-text: #5c554d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+        }
+        .container { max-width: 860px; margin: 0 auto; padding: 32px 20px 60px; }
+
+        .masthead {
+            text-align: center;
+            padding: 40px 20px 28px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 28px;
+        }
+        .masthead h1 {
+            font-size: 34px;
+            font-weight: 900;
+            letter-spacing: 5px;
+            color: var(--text);
+        }
+        .masthead .date {
+            font-size: 14px;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 12px;
+        }
+        .masthead .divider {
+            display: inline-block;
+            width: 50px;
+            height: 3px;
+            background: var(--text);
+            margin: 12px 0 0;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .tab {
+            flex-shrink: 0;
+            padding: 10px 22px;
+            font-size: 14px;
+            font-weight: 600;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all .2s ease;
+            color: var(--text-secondary);
+            letter-spacing: .5px;
+        }
+        .tab:hover { border-color: #bbb; }
+        .tab.active {
+            color: #fff;
+            border-color: transparent;
+        }
+        .tab.active.tech    { background: var(--accent-tech); }
+        .tab.active.economy  { background: var(--accent-economy); }
+        .tab.active.politics { background: var(--accent-politics); }
+        .tab.active.humanities { background: var(--accent-humanities); }
+        .tab.active.military { background: var(--accent-military); }
+
+        .tab .tab-dot {
+            display: inline-block;
+            width: 7px; height: 7px;
+            border-radius: 2px;
+            margin-right: 6px;
+            vertical-align: middle;
+            position: relative;
+            top: -1px;
+        }
+        .dot-tech    { background: var(--accent-tech); }
+        .dot-economy  { background: var(--accent-economy); }
+        .dot-politics { background: var(--accent-politics); }
+        .dot-humanities { background: var(--accent-humanities); }
+        .dot-military { background: var(--accent-military); }
+
+        .tab.active .tab-dot { background: rgba(255,255,255,.5); }
+
+        .tab .tab-count {
+            margin-left: 4px;
+            font-size: 11px;
+            opacity: .6;
+        }
+
+        .panel {
+            display: none;
+            animation: fadeIn .3s ease;
+        }
+        .panel.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .news-card {
+            background: var(--card);
+            border-radius: 10px;
+            padding: 22px 24px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+        .news-card:hover {
+            border-color: #bbb;
+            box-shadow: 0 2px 12px rgba(0,0,0,.04);
+            transform: translateX(3px);
+        }
+
+        .news-card-title {
+            font-size: 17px;
+            font-weight: 700;
+            line-height: 1.5;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+        .news-card-source {
+            display: inline-block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+        .news-card-source::before { content: '来源：'; }
+
+        .news-card-overview {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 14px;
+            padding: 12px 16px;
+            background: #faf9f7;
+            border-radius: 6px;
+            border-left: 3px solid var(--text-muted);
+        }
+        .overview-label {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-right: 10px;
+            padding: 2px 8px;
+            background: var(--tag-bg);
+            border-radius: 3px;
+            vertical-align: middle;
+        }
+
+        .detail-list { display: flex; flex-direction: column; gap: 8px; }
+        .detail-item {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            padding-left: 16px;
+            border-left: 2px solid var(--border);
+        }
+        .detail-item .dlbl {
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: 1px;
+            margin-right: 6px;
+            display: inline-block;
+            min-width: fit-content;
+        }
+        .category-tech .dlbl    { color: var(--accent-tech); }
+        .category-economy .dlbl  { color: var(--accent-economy); }
+        .category-politics .dlbl { color: var(--accent-politics); }
+        .category-humanities .dlbl { color: var(--accent-humanities); }
+        .category-military .dlbl { color: var(--accent-military); }
+
+        .summary-section {
+            margin-top: 40px;
+            background: var(--summary-bg);
+            border-radius: 12px;
+            padding: 32px 36px;
+            color: #dcd6cc;
+        }
+        .summary-section h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .summary-section h2::before {
+            content: '';
+            display: inline-block;
+            width: 5px;
+            height: 20px;
+            background: #dba959;
+            border-radius: 2px;
+        }
+        .summary-body .summary-line {
+            font-size: 13.5px;
+            line-height: 1.85;
+            color: #bfb5a6;
+            margin-bottom: 10px;
+            padding-left: 12px;
+        }
+        .summary-body .summary-line strong {
+            color: #dba959;
+            font-weight: 600;
+        }
+        .summary-body .summary-line:last-child {
+            margin-bottom: 0;
+            padding-top: 14px;
+            margin-top: 6px;
+            border-top: 1px solid rgba(219,169,89,.2);
+            color: #c4a96a;
+            font-style: italic;
+            padding-left: 0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 36px;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 12px;
+            letter-spacing: .5px;
+        }
+
+        .empty-notice {
+            color: #aaa;
+            padding: 20px 24px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .masthead h1 { font-size: 24px; letter-spacing: 3px; }
+            .news-card { padding: 18px 16px; }
+            .tab { padding: 8px 14px; font-size: 13px; }
+            .summary-section { padding: 24px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <div class="masthead">
+            <h1>每日新闻速递</h1>
+            <div class="divider"></div>
+            <div class="date">2026年06月26日</div>
+        </div>
+
+        
+
+        <div class="tabs">
+            <button class="tab tech active" data-panel="tech">
+                <span class="tab-dot dot-tech"></span>科技<span class="tab-count">10条</span>
+            </button>
+            <button class="tab economy" data-panel="economy">
+                <span class="tab-dot dot-economy"></span>经济<span class="tab-count">10条</span>
+            </button>
+            <button class="tab politics" data-panel="politics">
+                <span class="tab-dot dot-politics"></span>政治<span class="tab-count">10条</span>
+            </button>
+            <button class="tab humanities" data-panel="humanities">
+                <span class="tab-dot dot-humanities"></span>人文<span class="tab-count">10条</span>
+            </button>
+            <button class="tab military" data-panel="military">
+                <span class="tab-dot dot-military"></span>军事<span class="tab-count">4条</span>
+            </button>
+        </div>
+
+        <div class="panel category-tech active" id="panel-tech">
+            <div class="news-card category-tech" onclick="window.location.href='news-detail.html?n=1'">
+                <div class="news-card-title">赋能基础研究太初元碁携手上海交大共推AGI大模型研发-观察者网</div>
+                <div class="news-card-source">观察者</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>太初元碁与上海交通大学达成合作，共同研发AGI大模型，旨在通过AI for Science（AI4S）赋能基础科学研究，推动前沿技术突破。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">深度分析</span>：产学研深度融合是AGI从理论走向应用的关键路径，此举将加速中国在基础科学领域的AI化进程。</div>
+                </div>
+            </div>
+<div class="news-card category-tech" onclick="window.location.href='news-detail.html?n=2'">
+                <div class="news-card-title">AI人工智能发展历程：从图灵测试到通用智能的70年探索之路</div>
+                <div class="news-card-source">发现报告</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>文章回顾了AI从图灵测试到通用智能的70年发展历程，梳理了关键里程碑和技术演进，展望了AGI的未来方向。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">深度分析</span>：AI发展史表明，突破性创新往往源于长期基础研究积累，而非短期算力堆叠。</div>
+                </div>
+            </div>
+<div class="news-card category-tech" onclick="window.location.href='news-detail.html?n=3'">
+                <div class="news-card-title">上海交通大学与太初元碁达成合作以AI4S赋能基础研究</div>
+                <div class="news-card-source">中国科技网</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>上海交通大学与太初元碁合作，利用AI4S技术赋能基础研究，旨在通过人工智能加速科学发现和理论创新。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">深度分析</span>：AI4S模式将重塑科研范式，使计算科学成为与实验、理论并列的第三大研究支柱。</div>
+                </div>
+            </div>
+<div class="news-card category-tech" onclick="window.location.href='news-detail.html?n=4'">
+                <div class="news-card-title">法律人眼中的人工智能大模型：从概率建模到AGI 2.5</div>
+                <div class="news-card-source">君合</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>从法律人视角分析人工智能大模型，探讨从概率建模到AGI 2.5的演进，强调法律框架需适应AI技术迭代。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">深度分析</span>：法律界对AGI的深度参与，预示着未来AI治理将从被动合规转向主动设计。</div>
+                </div>
+            </div>
+<div class="news-card category-tech" onclick="window.location.href='news-detail.html?n=5'">
+                <div class="news-card-title">DeepMind最新推演：AGI并非终点！1亿个人类水平AI将涌现超级智能ASI</div>
+                <div class="news-card-source">麻省理工科技评论</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>DeepMind最新研究推演，AGI并非终点，未来可能出现1亿个人类水平AI，进而涌现出超级智能（ASI）。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">深度分析</span>：这一推演颠覆了传统AI发展观，暗示智能爆炸可能以群体协作而非单体突破形式实现。</div>
+                </div>
+            </div>
+<div class="news-card category-tech" onclick="window.location.href='news-detail.html?n=6'">
+                <div class="news-card-title">2026年中国智算中心（AIDC）产业链图谱及投资布局分析</div>
+                <div class="news-card-source">AgeClub</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>报告分析了2026年中国智算中心（AIDC）产业链图谱，梳理了从芯片到应用的各环节投资布局。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">深度分析</span>：智算中心作为新基建核心，其产业链投资将带动算力、算法、数据三要素协同升级。</div>
+                </div>
+            </div>
+<div class="news-card category-tech" onclick="window.location.href='news-detail.html?n=7'">
+                <div class="news-card-title">国产RPU人工智能芯片公司清微智能完成股改，已开始筹备IPO上市事宜</div>
+                <div class="news-card-source">腾讯新闻</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>国产RPU人工智能芯片公司清微智能完成股份制改革，并已开始筹备IPO上市事宜。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">深度分析</span>：RPU芯片的IPO进程标志着国产AI芯片从技术突破迈向资本化阶段，将加速商业化落地。</div>
+                </div>
+            </div>
+<div class="news-card category-tech" onclick="window.location.href='news-detail.html?n=8'">
+                <div class="news-card-title">超越大模型：为何 AI 要达到 AGI，仅靠规模远远不够</div>
+                <div class="news-card-source">IBM</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>IBM指出，仅靠扩大模型规模无法实现AGI，需要超越大模型范式，探索新的技术路径。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">深度分析</span>：规模定律边际效益递减，AGI突破需依赖架构创新，而非简单堆叠算力。</div>
+                </div>
+            </div>
+<div class="news-card category-tech" onclick="window.location.href='news-detail.html?n=9'">
+                <div class="news-card-title">GPU汹涌，非GPU洗牌</div>
+                <div class="news-card-source">36 Kr</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>文章分析GPU市场持续火热，而非GPU架构（如NPU、TPU）正面临行业洗牌，竞争格局生变。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">深度分析</span>：非GPU芯片的洗牌将加速差异化竞争，推动AI硬件从通用走向专用化。</div>
+                </div>
+            </div>
+<div class="news-card category-tech" onclick="window.location.href='news-detail.html?n=10'">
+                <div class="news-card-title">国产AI芯片：2025年度产品全景解析</div>
+                <div class="news-card-source">电子工程专辑</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>全景解析2025年度国产AI芯片产品，涵盖各厂商技术路线、性能参数及市场定位。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">深度分析</span>：国产AI芯片百花齐放，但生态兼容性和应用落地仍是制约规模化发展的核心瓶颈。</div>
+                </div>
+            </div>
+        </div>
+        <div class="panel category-economy" id="panel-economy">
+            <div class="news-card category-economy" onclick="window.location.href='news-detail.html?n=11'">
+                <div class="news-card-title">高盛：伊朗战争虽引发石油冲击，但不会造成广泛供应链危机</div>
+                <div class="news-card-source">财联社</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>高盛分析认为，伊朗战争虽可能引发石油冲击，但不会导致类似以往的广泛供应链危机。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">趋势研判</span>：全球供应链韧性增强，但地缘冲突对能源价格的短期冲击仍不可忽视。</div>
+                </div>
+            </div>
+<div class="news-card category-economy" onclick="window.location.href='news-detail.html?n=12'">
+                <div class="news-card-title">WTI油价再次破百！高盛：全球GDP或受损0.3个百分点 港美股资讯</div>
+                <div class="news-card-source">hstong.com</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>WTI油价再次突破每桶100美元，高盛预测全球GDP将因此受损0.3个百分点。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">趋势研判</span>：油价破百将加剧通胀压力，迫使各国央行在控通胀与保增长间艰难平衡。</div>
+                </div>
+            </div>
+<div class="news-card category-economy" onclick="window.location.href='news-detail.html?n=13'">
+                <div class="news-card-title">世界经济面临修复式增长下的再平衡</div>
+                <div class="news-card-source">新华网</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>世界经济正面临修复式增长下的再平衡，各国需应对增长动力切换和结构性调整。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">趋势研判</span>：后疫情时代的经济修复并非线性，再平衡过程将伴随贸易摩擦和产业重构。</div>
+                </div>
+            </div>
+<div class="news-card category-economy" onclick="window.location.href='news-detail.html?n=14'">
+                <div class="news-card-title">中国为全球经济治理提供正能量</div>
+                <div class="news-card-source">经济形势报告网</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>中国通过参与全球治理、推动多边合作，为全球经济治理体系提供正能量和稳定动力。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">趋势研判</span>：中国角色从参与者转向引领者，其治理方案将影响全球规则制定方向。</div>
+                </div>
+            </div>
+<div class="news-card category-economy" onclick="window.location.href='news-detail.html?n=15'">
+                <div class="news-card-title">全球经济复苏在关键路口徘徊</div>
+                <div class="news-card-source">经济日报</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>全球经济复苏在关键路口徘徊，面临通胀、地缘冲突和增长放缓等多重挑战。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">趋势研判</span>：复苏不确定性增加，各国需加强政策协调以避免分化加剧。</div>
+                </div>
+            </div>
+<div class="news-card category-economy" onclick="window.location.href='news-detail.html?n=16'">
+                <div class="news-card-title">2025世界经济宏观态势展望</div>
+                <div class="news-card-source">人民日报</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>展望2025年世界经济宏观态势，分析增长潜力、风险因素及政策走向。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">趋势研判</span>：2025年全球经济将进入低速增长新常态，结构性改革比短期刺激更关键。</div>
+                </div>
+            </div>
+<div class="news-card category-economy" onclick="window.location.href='news-detail.html?n=17'">
+                <div class="news-card-title">新华社国家高端智库报告《新质生产力的理论贡献和实践价值》全文</div>
+                <div class="news-card-source">新华网</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>新华社发布《新质生产力的理论贡献和实践价值》报告，系统阐述新质生产力的内涵与意义。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">趋势研判</span>：新质生产力理论为高质量发展提供新引擎，将重塑产业升级路径。</div>
+                </div>
+            </div>
+<div class="news-card category-economy" onclick="window.location.href='news-detail.html?n=18'">
+                <div class="news-card-title">第一观察｜习近平总书记首次提到“新质生产力”</div>
+                <div class="news-card-source">新华网</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>习近平总书记首次提出“新质生产力”概念，强调科技创新在推动生产力跃升中的核心作用。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">趋势研判</span>：这一提法标志着中国经济发展战略从要素驱动转向创新驱动。</div>
+                </div>
+            </div>
+<div class="news-card category-economy" onclick="window.location.href='news-detail.html?n=19'">
+                <div class="news-card-title">【中银证券·宏观：宏观和大类资产配置周报（2026.6.21）】要通航不要通胀</div>
+                <div class="news-card-source">腾讯新闻</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>中银证券宏观周报提出“要通航不要通胀”，分析大类资产配置策略，关注航运与通胀平衡。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">趋势研判</span>：在通胀与增长博弈中，资产配置需优先考虑流动性风险与供应链安全。</div>
+                </div>
+            </div>
+<div class="news-card category-economy" onclick="window.location.href='news-detail.html?n=20'">
+                <div class="news-card-title">张瑜：央行表述的三个变化——2026年一季度货币政策执行报告学习心得</div>
+                <div class="news-card-source">新浪财经</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>张瑜解读央行2026年一季度货币政策执行报告，指出表述中的三个关键变化。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">趋势研判</span>：央行措辞微调预示政策取向变化，市场需关注流动性管理节奏。</div>
+                </div>
+            </div>
+        </div>
+        <div class="panel category-politics" id="panel-politics">
+            <div class="news-card category-politics" onclick="window.location.href='news-detail.html?n=21'">
+                <div class="news-card-title">深化全球伙伴关系注入稳定动能</div>
+                <div class="news-card-source">人民日报</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>文章强调深化全球伙伴关系，为世界经济注入稳定动能，推动多边合作。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">战略解读</span>：在逆全球化浪潮下，伙伴关系网络成为抵御风险的重要屏障。</div>
+                </div>
+            </div>
+<div class="news-card category-politics" onclick="window.location.href='news-detail.html?n=22'">
+                <div class="news-card-title">王毅“外长记者会”释放哪些明确信号？多位专家详解</div>
+                <div class="news-card-source">中国人民大学</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>多位专家详解王毅外长记者会释放的信号，分析中国外交政策走向。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">战略解读</span>：外长表态凸显中国外交的主动性与确定性，为国际社会提供稳定预期。</div>
+                </div>
+            </div>
+<div class="news-card category-politics" onclick="window.location.href='news-detail.html?n=23'">
+                <div class="news-card-title">张汉晖大使在《俄罗斯报》发表署名文章 《以天下为怀 行人间正道 元首引领中国特色大国外交铸就新丰碑》</div>
+                <div class="news-card-source">驻俄罗斯大使馆</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>张汉晖大使在《俄罗斯报》发表署名文章，强调元首引领下中国特色大国外交的新成就。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">战略解读</span>：中俄战略协作深化，为多极化世界格局注入新变量。</div>
+                </div>
+            </div>
+<div class="news-card category-politics" onclick="window.location.href='news-detail.html?n=24'">
+                <div class="news-card-title">中美欧关系中的“欧盟变量”及其影响</div>
+                <div class="news-card-source">中国日报网</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>分析中美欧关系中的“欧盟变量”，探讨欧盟在中美博弈中的角色和影响。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">战略解读</span>：欧盟的战略自主性将重塑全球权力平衡，成为中美之外的第三极。</div>
+                </div>
+            </div>
+<div class="news-card category-politics" onclick="window.location.href='news-detail.html?n=25'">
+                <div class="news-card-title">2025年12月8日外交部发言人郭嘉昆主持例行记者会_中华人民共和国外交部</div>
+                <div class="news-card-source">mfa.gov.cn</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>外交部发言人郭嘉昆主持例行记者会，回应国际热点问题，阐述中方立场。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">战略解读</span>：例行记者会是中国对外发声的窗口，其内容反映外交政策的微调。</div>
+                </div>
+            </div>
+<div class="news-card category-politics" onclick="window.location.href='news-detail.html?n=26'">
+                <div class="news-card-title">《国际形势和中国外交蓝皮书》（2022/2023）</div>
+                <div class="news-card-source">ciis.org.cn</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>发布《国际形势和中国外交蓝皮书》（2022/2023），系统总结近年国际格局与中国外交实践。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">战略解读</span>：蓝皮书为理解中国外交逻辑提供权威框架，是研判未来趋势的重要参考。</div>
+                </div>
+            </div>
+<div class="news-card category-politics" onclick="window.location.href='news-detail.html?n=27'">
+                <div class="news-card-title">行政法规制定程序条例（中华人民共和国国务院令 第838号）</div>
+                <div class="news-card-source">中华人民共和国生态环境部</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>国务院发布第838号令，修订《行政法规制定程序条例》，规范立法流程。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">战略解读</span>：程序规范化将提升行政法规的透明度和可预期性，优化法治营商环境。</div>
+                </div>
+            </div>
+<div class="news-card category-politics" onclick="window.location.href='news-detail.html?n=28'">
+                <div class="news-card-title">习近平会见国际工商界代表时的讲话（全文）</div>
+                <div class="news-card-source">gwytb.gov.cn</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>习近平会见国际工商界代表并发表讲话，强调中国坚持开放合作、互利共赢。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">战略解读</span>：高层对话释放稳外资信号，增强跨国企业对中国市场的信心。</div>
+                </div>
+            </div>
+<div class="news-card category-politics" onclick="window.location.href='news-detail.html?n=29'">
+                <div class="news-card-title">国务院印发《关于推进服务业扩能提质的意见》</div>
+                <div class="news-card-source">经济形势报告网</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>国务院印发《关于推进服务业扩能提质的意见》，推动服务业高质量发展。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">战略解读</span>：服务业升级是经济转型关键，政策将催生新业态和就业机会。</div>
+                </div>
+            </div>
+<div class="news-card category-politics" onclick="window.location.href='news-detail.html?n=30'">
+                <div class="news-card-title">《中国与世界贸易组织》白皮书（全文）</div>
+                <div class="news-card-source">scio.gov.cn</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>发布《中国与世界贸易组织》白皮书，阐述中国履行WTO承诺及多边贸易体系贡献。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">战略解读</span>：白皮书回应国际关切，展现中国维护多边贸易体制的坚定立场。</div>
+                </div>
+            </div>
+        </div>
+        <div class="panel category-humanities" id="panel-humanities">
+            <div class="news-card category-humanities" onclick="window.location.href='news-detail.html?n=35'">
+                <div class="news-card-title">世界献血者日全国主会场活动上，武汉“熊猫侠”张志辉对患者深情喊话</div>
+                <div class="news-card-source">荆楚网</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>世界献血者日全国主会场活动中，武汉“熊猫侠”张志辉对患者深情喊话，呼吁献血。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">价值思考</span>：稀有血型献血者的故事凸显社会互助精神，提升公众对献血公益的认知。</div>
+                </div>
+            </div>
+<div class="news-card category-humanities" onclick="window.location.href='news-detail.html?n=36'">
+                <div class="news-card-title">从澎湃新闻年入4亿营收看《名人汇客厅》新媒体融合发展趋势</div>
+                <div class="news-card-source">潮新闻</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>从澎湃新闻年入4亿营收案例，分析《名人汇客厅》等新媒体融合发展趋势。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">价值思考</span>：新媒体盈利模式成熟，内容付费与品牌合作成为主要增长引擎。</div>
+                </div>
+            </div>
+<div class="news-card category-humanities" onclick="window.location.href='news-detail.html?n=37'">
+                <div class="news-card-title">《舍得智慧人物》第七季收官：全网曝光72亿，品效协同筑牢品牌价值护城河</div>
+                <div class="news-card-source">上海证券报</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>《舍得智慧人物》第七季收官，全网曝光72亿，实现品效协同，筑牢品牌护城河。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">价值思考</span>：高曝光与品牌价值绑定，证明深度内容营销在白酒行业中的有效性。</div>
+                </div>
+            </div>
+<div class="news-card category-humanities" onclick="window.location.href='news-detail.html?n=38'">
+                <div class="news-card-title">得罪半个娱乐圈，她还敢说真话吗？</div>
+                <div class="news-card-source">腾讯新闻</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>文章探讨某公众人物因直言得罪半个娱乐圈后，是否还能坚持说真话。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">价值思考</span>：娱乐圈言论生态折射出舆论压力与个人表达自由的博弈。</div>
+                </div>
+            </div>
+<div class="news-card category-humanities" onclick="window.location.href='news-detail.html?n=39'">
+                <div class="news-card-title">马应彪后人乐当“乡村领读人”，助力家乡推进“百千万工程”</div>
+                <div class="news-card-source">中山网</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>马应彪后人回乡担任“乡村领读人”，助力家乡推进“百千万工程”。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">价值思考</span>：乡贤回归参与乡村振兴，是文化传承与经济发展结合的有效模式。</div>
+                </div>
+            </div>
+<div class="news-card category-humanities" onclick="window.location.href='news-detail.html?n=40'">
+                <div class="news-card-title">人物系列纪实访谈节目《天下大连人》6月27日起重磅播出</div>
+                <div class="news-card-source">大连天健网</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>人物系列纪实访谈节目《天下大连人》将于6月27日起播出，聚焦大连籍杰出人物。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">价值思考</span>：地方人物IP节目有助于增强城市文化认同，推动文旅融合。</div>
+                </div>
+            </div>
+<div class="news-card category-humanities" onclick="window.location.href='news-detail.html?n=41'">
+                <div class="news-card-title">问道“元宇宙” 多行业科技爱好者齐聚南京话发展</div>
+                <div class="news-card-source">中国江苏网</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>多行业科技爱好者齐聚南京，问道“元宇宙”发展，探讨技术应用前景。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">价值思考</span>：跨行业交流加速元宇宙技术落地，但需警惕概念炒作与泡沫风险。</div>
+                </div>
+            </div>
+<div class="news-card category-humanities" onclick="window.location.href='news-detail.html?n=42'">
+                <div class="news-card-title">2025年创业者书单推荐：33本最佳商业书籍</div>
+                <div class="news-card-source">Shopify</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>推荐2025年创业者书单，包含33本最佳商业书籍，涵盖管理、创新等领域。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">价值思考</span>：书单反映创业知识需求变化，强调系统思维与韧性培养。</div>
+                </div>
+            </div>
+<div class="news-card category-humanities" onclick="window.location.href='news-detail.html?n=43'">
+                <div class="news-card-title">时代选出最重要 AI 100人，多位华人上榜</div>
+                <div class="news-card-source">36 Kr</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>时代杂志评选出AI领域最重要的100人，多位华人上榜，彰显全球影响力。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">价值思考</span>：华人AI人才崛起，反映中国在AI基础研究和应用领域的全球竞争力。</div>
+                </div>
+            </div>
+<div class="news-card category-humanities" onclick="window.location.href='news-detail.html?n=44'">
+                <div class="news-card-title">中国数字空间- 《零八宪章》签名人员名单汇总（共五批）</div>
+                <div class="news-card-source">China Digital Times</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>中国数字空间汇总《零八宪章》签名人员名单，共五批，涉及敏感政治内容。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">价值思考</span>：此类名单的公开可能引发对言论自由与法律边界的讨论。</div>
+                </div>
+            </div>
+        </div>
+        <div class="panel category-military" id="panel-military">
+            <div class="news-card category-military" onclick="window.location.href='news-detail.html?n=31'">
+                <div class="news-card-title">二战美军5大王牌武器：小小近炸引信挫败神风特攻</div>
+                <div class="news-card-source">新浪军事</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>文章介绍二战美军五大王牌武器，其中近炸引信有效挫败日本神风特攻队。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">安全启示</span>：技术微创新（如近炸引信）在战争中可产生颠覆性战术效果。</div>
+                </div>
+            </div>
+<div class="news-card category-military" onclick="window.location.href='news-detail.html?n=32'">
+                <div class="news-card-title">深度：浅谈中国为何发展歼轰7战机已对苏34产生兴趣|俄罗斯|空军|海军</div>
+                <div class="news-card-source">新浪军事</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>深度分析中国发展歼轰7战机的原因，并探讨对俄罗斯苏34的兴趣。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">安全启示</span>：中国战机研发路径反映对远程打击能力的战略需求，技术引进与自主创新并行。</div>
+                </div>
+            </div>
+<div class="news-card category-military" onclick="window.location.href='news-detail.html?n=33'">
+                <div class="news-card-title">华为威胁否 佩洛西与傅莹的慕尼黑当面交锋</div>
+                <div class="news-card-source">RFI</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>报道佩洛西与傅莹在慕尼黑安全会议上就华为问题当面交锋。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">安全启示</span>：华为议题成为中美科技博弈焦点，外交交锋凸显技术主权之争。</div>
+                </div>
+            </div>
+<div class="news-card category-military" onclick="window.location.href='news-detail.html?n=34'">
+                <div class="news-card-title">中俄联手升级无人机战力 北约警报拉响</div>
+                <div class="news-card-source">阿波罗新闻网</div>
+                <div class="news-card-overview"><span class="overview-label">内容概括</span>中俄联手升级无人机战力，引发北约警报，地缘安全格局生变。</div>
+                <div class="detail-list">
+                    <div class="detail-item"><span class="dlbl">安全启示</span>：中俄军事技术合作将改变区域力量平衡，促使北约调整防御策略。</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-section">
+            <h2>今日总结与启示</h2>
+            <div class="summary-body">
+                <p class="summary-line"><strong>经济层面</strong>：全球正经历“修复式增长”下的再平衡，油价破百与高盛预测的GDP受损0.3个百分点，凸显地缘冲突对脆弱复苏的直接冲击；而中国提出的“新质生产力”概念，则标志着从传统要素驱动向科技创新驱动的根本性转型，为全球经济治理注入新动能。</p>
+<p class="summary-line"><strong>科技层面</strong>：AI正从大模型走向AGI乃至ASI的探索，DeepMind的推演与IBM的“超越规模”论，共同指向技术范式的根本性变革；国产RPU芯片公司筹备IPO与智算中心产业链的成熟，表明中国正从应用层向底层硬件与基础研究（如AI4S）双向发力，争夺未来智能时代的制高点。</p>
+<p class="summary-line"><strong>政治与国际层面</strong>：中国外交在“元首引领”下，通过深化全球伙伴关系与明确WTO承诺，为动荡世界提供稳定锚点；而“欧盟变量”在中美博弈中的凸显，以及王毅记者会释放的信号，揭示了大国关系正从单极对抗向多极博弈的复杂演变。</p>
+<p class="summary-line"><strong>军事安全层面</strong>：中俄联手升级无人机战力，直接拉响北约警报，表明非对称作战能力正重塑地缘安全格局；同时，对历史武器（如近炸引信）的回顾，暗示技术代差仍是冲突胜负的关键变量。</p>
+<p class="summary-line"><strong>人文人物层面</strong>：“熊猫侠”张志辉的无偿献血与马应彪后人的“乡村领读”，展现了平凡个体在公益与文化传承中的时代担当；而《时代》评选的AI百人中华人上榜，则映射出全球科技浪潮中，华人智慧正从幕后走向台前，成为塑造未来的关键力量。</p>
+<p class="summary-line">综合来看，今日新闻勾勒出一个在“科技跃迁”与“地缘震荡”双重张力下加速重构的世界：中国正以“新质生产力”为核心，试图在旧秩序瓦解与新格局形成中，通过技术自主与外交平衡，寻找一条稳健的突围之路。</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            每日早 10 点自动更新 &nbsp;·&nbsp; 信息来源：主流新闻媒体 &nbsp;·&nbsp; 仅供参考
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var tabs = document.querySelectorAll('.tab');
+            var panels = document.querySelectorAll('.panel');
+
+            function switchTab(tab) {
+                var panel = tab.getAttribute('data-panel');
+                tabs.forEach(function (x) { x.classList.remove('active'); });
+                panels.forEach(function (x) { x.classList.remove('active'); });
+                tab.classList.add('active');
+                document.getElementById('panel-' + panel).classList.add('active');
+            }
+
+            tabs.forEach(function (t) {
+                t.addEventListener('click', function () { switchTab(this); });
+            });
+
+            var activeTab = document.querySelector('.tab.active');
+            var activePanel = document.querySelector('.panel.active');
+            if (activePanel && activePanel.textContent.trim() === '暂无新闻') {
+                for (var i = 0; i < tabs.length; i++) {
+                    var pid = tabs[i].getAttribute('data-panel');
+                    var panelEl = document.getElementById('panel-' + pid);
+                    if (panelEl && panelEl.textContent.trim() !== '暂无新闻') {
+                        switchTab(tabs[i]);
+                        break;
+                    }
+                }
+            }
+        })();
+    </script>
+</body>
+</html>
