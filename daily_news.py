@@ -182,22 +182,21 @@ def _fetch_rss_news(source):
                 if src_text and len(src_text) <= 30:
                     source_name = src_text
 
-            # 提取原始文章URL：优先从 source 标签的 url 属性获取
+            # 提取原始文章URL
+            # 优先级：1) <link> 元素(Google重定向→真实文章) 2) <source url=""> 3) #
             original_url = '#'
-            if src_el and src_el.get('url'):
-                original_url = src_el['url']
-            if original_url == '#' and link_el:
+            if link_el and link_el.text:
                 url_text = link_el.text.strip()
                 if url_text.startswith('http'):
                     original_url = url_text
+            if original_url == '#' and src_el and src_el.get('url'):
+                original_url = src_el['url']
 
             news_list.append({
                 'title': title,
                 'source': source_name,
                 'url': original_url,
             })
-            if len(news_list) >= 6:
-                break
             if len(news_list) >= 6:
                 break
 
