@@ -954,8 +954,8 @@ def fetch_all_news():
                 seen.add(news_item['title'])
                 unique_news.append(news_item)
 
-        all_news[category] = unique_news[:5]
-        print(f"🔍 {CATEGORY_NAMES.get(category, category)}: 抓取到 {len(unique_news[:5])} 条")
+        all_news[category] = unique_news[:10]
+        print(f"🔍 {CATEGORY_NAMES.get(category, category)}: 抓取到 {len(unique_news[:10])} 条")
 
     return all_news
 
@@ -1092,45 +1092,27 @@ def main():
     print(f"📰 每日新闻更新 - {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     print("=" * 50)
 
-    use_fallback = False
+    news_data = {}
     try:
         news_data = fetch_all_news()
-        total = sum(len(v) for v in news_data.values())
-        if total < 3:
-            print(f"\n⚠️ 只爬取到 {total} 条新闻，启用动态备用数据")
-            news_data = get_fallback_news()
-            use_fallback = True
     except Exception as e:
-        print(f"\n⚠️ 爬取出错: {str(e)[:80]}，启用动态备用数据")
-        news_data = get_fallback_news()
-        use_fallback = True
+        print(f"\n⚠️ 爬取出错: {str(e)[:80]}，今天无新闻可展示")
 
-    if use_fallback:
-        enriched = []
-        nid = 1
-        for cat in ['tech', 'economy', 'politics', 'military', 'humanities']:
-            for item in news_data.get(cat, []):
-                overview = generate_fallback_overview(item['title'], cat)
-                enriched.append({
-                    'cat': cat,
-                    'title': item['title'],
-                    'source': item['source'],
-                    'url': item['url'],
-                    'overview': overview,
-                    'details': [
-                        {'label': '核心内容', 'content': overview},
-                    ],
-                })
-                nid += 1
-    else:
-        enriched = enrich_all_news(news_data)
+    total = sum(len(v) for v in news_data.values())
+    print(f"\n📊 共抓取 {total} 条新闻")
+
+    if total == 0:
+        print("⚠️ 今天没有抓到任何新闻")
+        update_html_template([], '<p>今日暂无新闻可展示，请稍后再来查看。</p>', use_fallback=False)
+        return
+
+    enriched = enrich_all_news(news_data)
+    total_enriched = len(enriched)
+    print(f"\n✅ 成功处理 {total_enriched} 篇新闻")
 
     summary_html = compose_daily_summary(enriched)
-    update_html_template(enriched, summary_html, use_fallback)
-
-    total_news = len(enriched)
-    total_with_content = sum(1 for n in enriched if n['overview'])
-    print(f"\n🎉 更新完成！共 {total_news} 条新闻，{total_with_content} 条抓取到正文内容")
+    update_html_template(enriched, summary_html, use_fallback=False)
+    print("\n🎉 每日新闻更新完成")
 
 
 if __name__ == "__main__":
