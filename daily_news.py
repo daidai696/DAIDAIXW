@@ -152,10 +152,11 @@ def _fetch_html_news(source):
 
 def _fetch_rss_news(source):
     news_list = []
+    now = datetime.now()
     try:
         resp = requests.get(source['url'], headers=HEADERS, timeout=15)
         soup = BeautifulSoup(resp.text, 'xml')
-        items = soup.find_all('item')[:20]
+        items = soup.find_all('item')[:30]
 
         for item in items:
             title_el = item.find('title')
@@ -175,6 +176,18 @@ def _fetch_rss_news(source):
                     title = parts[0].strip()
             if len(title) < 10 or len(title) > 120:
                 continue
+
+            # 时效性过滤：只保留24小时内的新闻
+            pub_date_el = item.find('pubDate')
+            if pub_date_el:
+                try:
+                    pub_date_str = pub_date_el.text.strip()
+                    pub_date = datetime.strptime(pub_date_str, '%a, %d %b %Y %H:%M:%S %Z')
+                    age_hours = (now - pub_date).total_seconds() / 3600
+                    if age_hours > 24:
+                        continue  # 跳过超过24小时的旧新闻
+                except Exception:
+                    pass  # 日期解析失败不拦截
 
             source_name = 'GoogleNews'
             if src_el:
@@ -939,23 +952,60 @@ def update_html_template(enriched_news, summary_html, use_fallback=False):
     print("✅ news-detail.html 已生成")
 
 
+def _normalize_title(title):
+    """标题归一化用于相似度匹配"""
+    import re as _re
+    t = title.lower()
+    t = _re.sub(r'[\s\W_]+', '', t)
+    return t
+
+
+def _title_similarity(a, b):
+    """简单相似度：归一化后前缀相同则视为同一新闻"""
+    na, nb = _normalize_title(a), _normalize_title(b)
+    if not na or not nb:
+        return 0.0
+    if na == nb:
+        return 1.0
+    # 检查前15字符匹配（覆盖主谓宾核心）
+    prefix_len = min(15, len(na), len(nb))
+    if na[:prefix_len] == nb[:prefix_len]:
+        return 0.8
+    # 检查包含关系
+    if na in nb or nb in na:
+        return 0.7
+    return 0.0
+
+
 def fetch_all_news():
     all_news = {}
     for category, sources in NEWS_SOURCES.items():
-        category_news = []
+        raw_items = []
         for source in sources:
             news = fetch_news_from_source(source)
-            category_news.extend(news)
+            raw_items.extend(news)
 
-        seen = set()
-        unique_news = []
-        for news_item in category_news:
-            if news_item['title'] not in seen:
-                seen.add(news_item['title'])
-                unique_news.append(news_item)
+        # 按相似度归类，统计每个新闻的"出现频次"
+        clusters = []  # [{'title': str, 'count': int, 'item': dict}, ...]
+        for item in raw_items:
+            matched = False
+            for cluster in clusters:
+                if _title_similarity(item['title'], cluster['title']) >= 0.7:
+                    cluster['count'] += 1
+                    matched = True
+                    break
+            if not matched:
+                clusters.append({'title': item['title'], 'count': 1, 'item': item})
 
-        all_news[category] = unique_news[:10]
-        print(f"🔍 {CATEGORY_NAMES.get(category, category)}: 抓取到 {len(unique_news[:10])} 条")
+        # 按热度（出现频次）降序排，相同频次按原始顺序
+        clusters.sort(key=lambda c: c['count'], reverse=True)
+
+        unique_news = [c['item'] for c in clusters]
+        top5 = unique_news[:5]
+        all_news[category] = top5
+        if clusters:
+            top_count = clusters[0]['count']
+            print(f"🔍 {CATEGORY_NAMES.get(category, category)}: 抓取 {len(clusters)} 条独立新闻，最高热度 {top_count} 源报道，取前 5")
 
     return all_news
 
