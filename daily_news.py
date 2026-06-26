@@ -21,34 +21,34 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 NEWS_SOURCES = {
     'tech': [
-        # 科技 —— 侧重 AI 和前沿技术
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%22+%22%E5%A4%A7%E6%A8%A1%E5%9E%8B%22+%22AI%22+%22AGI%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22AI%E8%8A%AF%E7%89%87%22+%22GPU%22+%22%E6%99%BA%E7%AE%97%E4%B8%AD%E5%BF%83%22+%22%E6%9C%BA%E5%99%A8%E4%BA%BA%22+%22%E8%87%AA%E5%8A%A8%E9%A9%BE%E9%A9%B6%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E7%A7%91%E6%8A%80%E5%88%9B%E6%96%B0%22+%22%E5%8D%8A%E5%AF%BC%E4%BD%93%22+%22%E9%87%8F%E5%AD%90%E8%AE%A1%E7%AE%97%22+%22%E6%96%B0%E8%83%BD%E6%BA%90%22+%22%E5%A4%AA%E7%A9%BA%E6%8E%A2%E7%B4%A2%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        # 科技 —— 侧重 AI 和前沿技术（每个源单关键词，覆盖面更广）
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=AI%E5%A4%A7%E6%A8%A1%E5%9E%8B&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=AI%E8%8A%AF%E7%89%87&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
     ],
     'economy': [
         # 经济 —— 聚焦全球和中国宏观经济发展（去股票化）
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E5%85%A8%E7%90%83%E7%BB%8F%E6%B5%8E%22+%22GDP%22+%22%E4%BE%9B%E5%BA%94%E9%93%BE%22+%22%E8%B4%B8%E6%98%93%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E4%B8%AD%E5%9B%BD%E7%BB%8F%E6%B5%8E%22+%22%E9%AB%98%E8%B4%A8%E9%87%8F%E5%8F%91%E5%B1%95%22+%22%E6%96%B0%E7%94%9F%E4%BA%A7%E5%8A%9B%22+%22%E4%BA%A7%E4%B8%9A%E5%8D%87%E7%BA%A7%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E9%80%9A%E8%83%80%22+%22%E5%A4%AE%E8%A1%8C%22+%22%E8%B4%A7%E5%B8%81%E6%94%BF%E7%AD%96%22+%22%E8%B4%A2%E6%94%BF%22+%22%E5%9B%BD%E9%99%85%E7%BB%8F%E6%B5%8E%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E5%85%A8%E7%90%83%E7%BB%8F%E6%B5%8E&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E4%B8%AD%E5%9B%BD%E7%BB%8F%E6%B5%8E&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E9%AB%98%E8%B4%A8%E9%87%8F%E5%8F%91%E5%B1%95&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
     ],
     'politics': [
-        # 政治 —— 国际关系 + 中国政策（不只是内政）
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E4%B8%AD%E7%BE%8E%E5%85%B3%E7%B3%BB%22+%22%E4%B8%AD%E6%AC%A7%22+%22%E5%A4%96%E4%BA%A4%22+%22%E5%9B%BD%E9%99%85%E5%85%B3%E7%B3%BB%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E5%9B%BD%E9%99%85%E5%BD%A2%E5%8A%BF%22+%22%E5%9C%B0%E7%BC%98%E6%94%BF%E6%B2%BB%22+%22%E5%8D%97%E6%B5%B7%22+%22G7%22+%22%E8%81%94%E5%90%88%E5%9B%BD%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E5%9B%BD%E5%8A%A1%E9%99%A2%22+%22%E6%94%BF%E7%AD%96%22+%22%E6%94%B9%E9%9D%A9%22+%22%E6%B3%95%E8%A7%84%22+%22%E4%B8%AD%E5%9B%BD%E6%94%BF%E5%BA%9C%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        # 政治 —— 国际关系 + 中国政策
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E5%A4%96%E4%BA%A4&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E5%9B%BD%E9%99%85%E5%85%B3%E7%B3%BB&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E5%9B%BD%E5%8A%A1%E9%99%A2&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
     ],
     'humanities': [
         # 人文 —— 聚焦具体人物故事
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E4%BA%BA%E7%89%A9%22+%22%E8%AE%BF%E8%B0%88%22+%22%E4%BA%BA%E7%89%A9%E6%95%85%E4%BA%8B%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E8%89%BA%E6%9C%AF%E5%AE%B6%22+%22%E4%BD%9C%E5%AE%B6%22+%22%E5%AD%A6%E8%80%85%22+%22%E4%BC%81%E4%B8%9A%E5%AE%B6%22+%22%E5%88%9B%E4%B8%9A%E8%80%85%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E6%96%87%E5%8C%96%E5%90%8D%E4%BA%BA%22+%22%E7%A4%BE%E4%BC%9A%E8%BF%90%E5%8A%A8%22+%22%E5%85%AC%E7%9B%8A%22+%22%E4%BA%BA%E6%96%87%E6%8A%A5%E5%91%8A%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E4%BA%BA%E7%89%A9%E6%95%85%E4%BA%8B&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E8%89%BA%E6%9C%AF%E5%AE%B6&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E7%A7%91%E5%AD%A6%E5%AE%B6&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
     ],
     'military': [
         # 军事 —— 新型装备 + 国际冲突
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E5%86%9B%E4%BA%8B%E8%A3%85%E5%A4%87%22+%22%E6%96%B0%E5%9E%8B%E6%88%98%E6%9C%BA%22+%22%E5%86%9B%E8%88%B0%22+%22%E5%AF%BC%E5%BC%B9%22+%22%E6%AD%A6%E5%99%A8%E7%B3%BB%E7%BB%9F%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E5%86%9B%E4%BA%8B%E5%86%B2%E7%AA%81%22+%22%E6%88%98%E4%BA%89%22+%22%E5%AE%89%E5%85%A8%E5%A8%81%E8%83%81%22+%22%E5%8D%8E%E4%B8%BA%22+%22%E5%8C%97%E7%BA%A6%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
-        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%22%E5%9B%BD%E9%98%B2%E7%A7%91%E6%8A%80%22+%22%E5%86%9B%E4%BA%8B%E6%BC%94%E4%B9%A0%22+%22%E9%98%B2%E5%8D%AB%22+%22%E5%9C%B0%E7%BC%98%E5%86%B2%E7%AA%81%22&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E5%86%9B%E4%BA%8B%E8%A3%85%E5%A4%87&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E5%86%9B%E4%BA%8B%E5%86%B2%E7%AA%81&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
+        {'name': 'GoogleNews', 'url': 'https://news.google.com/rss/search?q=%E5%9B%BD%E9%98%B2&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'type': 'rss'},
     ],
 }
 
