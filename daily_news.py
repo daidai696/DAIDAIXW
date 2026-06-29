@@ -152,7 +152,9 @@ def _fetch_html_news(source):
 
 def _fetch_rss_news(source):
     news_list = []
+    # 以脚本运行时刻为基准（不是RSS的pubDate），确保取到"今天"的新闻
     now = datetime.now()
+    cutoff = now - timedelta(hours=24)
     try:
         resp = requests.get(source['url'], headers=HEADERS, timeout=15)
         soup = BeautifulSoup(resp.text, 'xml')
@@ -177,15 +179,14 @@ def _fetch_rss_news(source):
             if len(title) < 10 or len(title) > 120:
                 continue
 
-            # 时效性过滤：只保留24小时内的新闻
+            # 时效性过滤：以"运行时刻-24小时"为基准
             pub_date_el = item.find('pubDate')
             if pub_date_el:
                 try:
                     pub_date_str = pub_date_el.text.strip()
                     pub_date = datetime.strptime(pub_date_str, '%a, %d %b %Y %H:%M:%S %Z')
-                    age_hours = (now - pub_date).total_seconds() / 3600
-                    if age_hours > 24:
-                        continue  # 跳过超过24小时的旧新闻
+                    if pub_date < cutoff:
+                        continue  # 早于24小时前的旧新闻
                 except Exception:
                     pass  # 日期解析失败不拦截
 
